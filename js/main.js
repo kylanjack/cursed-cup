@@ -44,13 +44,15 @@
 
   // Overlay, viewer, piles, map and top bar share one handler. stopPropagation keeps nested clicks from leaking.
   function onUiTap(e) {
-    var el = e.target.closest('[data-pick],[data-act],[data-view],[data-node]');
+    var el = e.target.closest('[data-pick],[data-act],[data-view],[data-node],[data-squad]');
     if (!el) return;
     e.stopPropagation();
     var pick = el.getAttribute('data-pick');
     var act = el.getAttribute('data-act');
     var view = el.getAttribute('data-view');
     var node = el.getAttribute('data-node');
+    var sq = el.getAttribute('data-squad');
+    if (sq) { CC.ui.squadInfo = CC.ui.squadInfo === sq ? null : sq; CC.render(run); return; }
     if (pick) { CC.pickReward(run, pick); commit(); return; }
     if (view) { CC.ui.view = view; CC.render(run); return; }
     if (node) { CC.ui.selected = CC.ui.selected === node ? null : node; CC.render(run); return; }
@@ -110,7 +112,7 @@
     document.getElementById('hand').addEventListener('click', onHandTap);
     document.getElementById('btn-end').addEventListener('click', onEndTurn);
     document.getElementById('btn-new').addEventListener('click', onNewTap);
-    ['overlay', 'viewer', 'piles', 'map', 'map-side', 'btn-deck'].forEach(function (id) {
+    ['overlay', 'viewer', 'piles', 'map', 'map-side', 'btn-deck', 'squad'].forEach(function (id) {
       document.getElementById(id).addEventListener('click', onUiTap);
     });
     try {

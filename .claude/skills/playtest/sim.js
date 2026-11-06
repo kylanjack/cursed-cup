@@ -6,10 +6,18 @@ const fs = require('fs'), path = require('path');
 const root = path.resolve(__dirname, '../../..');
 global.window = global;
 global.localStorage = { getItem() { return null; }, setItem() {}, removeItem() {} };
-for (const f of ['state', 'data_cards', 'data_opponents', 'data_run', 'match', 'effects', 'opponent', 'reward', 'map', 'run']) {
+for (const f of ['state', 'data_cards', 'data_opponents', 'data_run', 'data_squad', 'squad', 'match', 'effects', 'opponent', 'reward', 'map', 'run']) {
   eval(fs.readFileSync(path.join(root, 'js', f + '.js'), 'utf8'));
 }
 const CC = global.CC;
+// TUNE env var: try opponent changes without editing data, e.g. TUNE=def:3,gk:1,shot:2,control:0 (added to every opponent).
+if (process.env.TUNE) {
+  const d = Object.fromEntries(process.env.TUNE.split(',').map(x => x.split(':')).map(([k, v]) => [k, +v]));
+  Object.values(CC.OPPONENTS).forEach(o => {
+    o.def += d.def || 0; o.gk += d.gk || 0; o.control += d.control || 0;
+    Object.values(o.patterns).forEach(p => { p.shoot = p.shoot.map(n => n + (d.shot || 0)); });
+  });
+}
 const find = (s, pred) => s.hand.find(h => pred(CC.card(h)) && !CC.cardBlock(s, h));
 const play = (s, h) => CC.playCard(s, h.uid);
 
@@ -45,11 +53,13 @@ function botTurn(s) {
 }
 
 function playOut(s) { let g = 0; while (!s.over && g++ < 40) botTurn(s); return s; }
-function runMatch(seed, opp, row) { return playOut(CC.newMatch(seed, opp, CC.STARTER_DECK, { row: row || 0 })); }
+// SQUAD env var: comma list of fit squad ids (default: full starter squad, 'none' for nobody).
+const SQUAD = process.env.SQUAD ? (process.env.SQUAD === 'none' ? [] : process.env.SQUAD.split(',')).map(id => ({ id, injuries: 0, status: 'fit' })) : null;
+function runMatch(seed, opp, row) { return playOut(CC.newMatch(seed, opp, CC.STARTER_DECK, { row: row || 0, squad: SQUAD || undefined })); }
 
 if (process.argv[2] === 'run') {
   const R = +process.argv[3] || 500, dist = {}, lostTo = {};
-  let total = 0, champs = 0;
+  let total = 0, champs = 0, inj = 0, cos = 0;
   for (let i = 1; i <= R; i++) {
     const run = CC.newRun(i * 104729, false);
     while (!run.result) {
@@ -62,10 +72,12 @@ if (process.argv[2] === 'run') {
       CC.toMap(run);
     }
     if (run.result === 'champion') champs++;
+    inj += run.stats.injuries; cos += run.stats.careerOvers;
     total += run.won; dist[run.won] = (dist[run.won] || 0) + 1;
   }
   console.log('avg matches won per run ' + (total / R).toFixed(2) + ' of ' + CC.MAP_RULES.rows + '  cup won ' + (100 * champs / R).toFixed(1) + '%');
   console.log('wins before end: ' + Object.entries(dist).map(e => e[0] + ':' + e[1]).join('  '));
+  console.log('injuries per run ' + (inj / R).toFixed(2) + '  career overs per run ' + (cos / R).toFixed(2));
   console.log('runs ended by: ' + Object.entries(lostTo).map(e => e[0] + ':' + e[1]).join('  '));
   process.exit(0);
 }

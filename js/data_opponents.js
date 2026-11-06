@@ -10,7 +10,7 @@
 //                   ('waste' = TIME WASTING, skipped unless they lead)
 //     shoot       — SHOOT numbers, cycled when the ball is in shootZone
 //     withoutBall — cycled when you have the ball: press / dirty / park, each with n
-//                   ('dirty' also takes target: squad player name)
+//                   ('dirty' also takes target: a squad id, or 'random' for a random fit player)
 //   branches      — checked in order, first match picks the pattern, else 'normal'
 //     { when: 'trailing' | 'leading', fromTurn, use: patternName }
 (function (CC) {
@@ -20,21 +20,21 @@
     rustborough: {
       id: 'rustborough', name: 'Rustborough Athletic', short: 'RUS',
       style: 'Builds up and shoots. Presses lightly.',
-      def: 8, gk: 4, control: 5, shootZone: 1,
+      def: 15, gk: 4, control: 5, shootZone: 1,
       patterns: {
         normal: {
           withBall: [{ type: 'build', n: 4 }, { type: 'build', n: 3 }, { type: 'build', n: 5 }],
-          shoot: [12, 13, 11],
+          shoot: [21, 22, 20],
           withoutBall: [{ type: 'press', n: 3 }, { type: 'park', n: 3 }, { type: 'press', n: 2 }]
         },
         chasing: {
           withBall: [{ type: 'build', n: 6 }, { type: 'build', n: 5 }],
-          shoot: [13, 14],
+          shoot: [22, 23],
           withoutBall: [{ type: 'press', n: 4 }, { type: 'press', n: 5 }]
         },
         protect: {
           withBall: [{ type: 'waste' }, { type: 'build', n: 2 }],
-          shoot: [11],
+          shoot: [20],
           withoutBall: [{ type: 'park', n: 5 }, { type: 'press', n: 3 }]
         }
       },
@@ -47,22 +47,22 @@
     // Press-heavy: hard to keep the ball, but a soft back line once you get through.
     hollow: {
       id: 'hollow', name: 'The Hollow XI', short: 'HOL',
-      style: 'Presses hard and shoots on the turnover. Weak at the back.',
-      def: 7, gk: 3, control: 5, shootZone: 1,
+      style: 'Presses hard, with dirty tackles. Shoots on the turnover. Weak at the back.',
+      def: 12, gk: 3, control: 5, shootZone: 1,
       patterns: {
         normal: {
           withBall: [{ type: 'build', n: 3 }, { type: 'build', n: 4 }],
-          shoot: [11, 12],
-          withoutBall: [{ type: 'press', n: 5 }, { type: 'press', n: 6 }, { type: 'press', n: 4 }, { type: 'press', n: 7 }]
+          shoot: [16, 17],
+          withoutBall: [{ type: 'press', n: 5 }, { type: 'dirty', n: 5, target: 'random' }, { type: 'press', n: 4 }, { type: 'press', n: 7 }]
         },
         chasing: {
           withBall: [{ type: 'build', n: 5 }],
-          shoot: [12, 13],
-          withoutBall: [{ type: 'press', n: 6 }, { type: 'press', n: 7 }]
+          shoot: [17, 18],
+          withoutBall: [{ type: 'press', n: 6 }, { type: 'dirty', n: 6, target: 'random' }]
         },
         protect: {
           withBall: [{ type: 'waste' }, { type: 'build', n: 3 }],
-          shoot: [11],
+          shoot: [16],
           withoutBall: [{ type: 'press', n: 5 }, { type: 'park', n: 3 }]
         }
       },
@@ -76,21 +76,21 @@
     saltmarsh: {
       id: 'saltmarsh', name: 'Saltmarsh Rovers', short: 'SAL',
       style: 'Sits deep and parks the bus. Easy to rob. Hits hard on the break.',
-      def: 9, gk: 5, control: 4, shootZone: 1,
+      def: 18, gk: 5, control: 4, shootZone: 1,
       patterns: {
         normal: {
           withBall: [{ type: 'build', n: 6 }, { type: 'build', n: 5 }],
-          shoot: [11, 12],
+          shoot: [21, 22],
           withoutBall: [{ type: 'park', n: 4 }, { type: 'press', n: 2 }, { type: 'park', n: 5 }]
         },
         chasing: {
           withBall: [{ type: 'build', n: 7 }],
-          shoot: [13, 14],
+          shoot: [23, 24],
           withoutBall: [{ type: 'press', n: 4 }, { type: 'press', n: 5 }]
         },
         protect: {
           withBall: [{ type: 'waste' }, { type: 'build', n: 3 }],
-          shoot: [11],
+          shoot: [21],
           withoutBall: [{ type: 'park', n: 6 }, { type: 'park', n: 5 }]
         }
       },

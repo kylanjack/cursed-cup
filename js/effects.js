@@ -16,7 +16,10 @@
     var from = s.ball.zone;
     s.ball.zone = Math.max(from, Math.min(2, to));
     s.turnPlays.zones += s.ball.zone - from;
-    return s.ball.zone > from ? 'ball to ' + CC.ZONES[s.ball.zone] : 'ball stays in ' + CC.ZONES[from];
+    if (s.ball.zone <= from) return 'ball stays in ' + CC.ZONES[from];
+    var bonus = CC.advanceBonus(s);
+    s.atk += bonus;
+    return 'ball to ' + CC.ZONES[s.ball.zone] + (bonus ? ' (+' + bonus + ' ATK ' + CC.squadHook(s, 'advanceAtk').name + ')' : '');
   }
 
   function stealTo(s, zone) {
@@ -119,7 +122,7 @@
 
   // Shot power before you commit: card power + ATK + cross bonus + Volley bonus.
   CC.shotPower = function (s, c) {
-    var p = c.params.power + s.atk + s.shotBonus;
+    var p = c.params.power + s.atk + s.shotBonus + CC.shotSquadBonus(s);
     if (c.params.bonus2zones && s.turnPlays.zones >= 2) p += c.params.bonus2zones;
     return p;
   };

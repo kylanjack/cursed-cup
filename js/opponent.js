@@ -52,7 +52,9 @@
     } else {
       it = next(s, name + '.without', pat.withoutBall);
     }
-    s.opp.intent = { type: it.type, n: it.n || 0, target: it.target || null };
+    var target = it.type === 'dirty' ? CC.pickTarget(s, it.target) : null;
+    // No fit player left to hurt: it is a plain press.
+    s.opp.intent = { type: target || it.type !== 'dirty' ? it.type : 'press', n: it.n || 0, target: target };
   };
 
   // Stale intents fizzle: a with-ball intent needs them on the ball, and vice versa.
@@ -106,7 +108,11 @@
     shoot: function (s) {
       var power = CC.theirShot(s);
       var wall = CC.yourWall(s);
-      if (power > wall) {
+      if (power > wall && CC.goalCancelReady(s)) {
+        s.cancelled++;
+        CC.restart(s, 'you');
+        CC.log(s, 'They shoot: ' + power + ' vs your ' + wall + '. In, but ' + CC.squadHook(s, 'gk').name + ' cancels it. Your ball in MIDFIELD.', 'goal');
+      } else if (power > wall) {
         s.score.them++;
         CC.restart(s, 'you');
         CC.log(s, 'They shoot: ' + power + ' vs your ' + wall + '. GOAL against.', 'bad');
@@ -126,8 +132,9 @@
       if (s.shpGained > it.n) {
         CC.log(s, 'Your SHAPE gained (' + s.shpGained + ') beats ' + it.n + '. No injury.');
       } else {
-        // Injuries need the squad (Milestone 5). Logged only for now.
-        CC.log(s, 'Dirty tackle on ' + (it.target || 'your player') + '. Injuries arrive with the squad.', 'bad');
+        var line = CC.injure(s, it.target);
+        s.gk = CC.gkValue(s);
+        CC.log(s, 'Dirty tackle. ' + (line || 'Nobody hurt.'), 'bad');
       }
     },
     park: function (s, it) {
@@ -149,8 +156,10 @@
         return { head: head, detail: 'Ball to ' + CC.ZONES[Math.max(0, s.ball.zone - 1)] + '. Banked ATK ' + s.opp.atk + ' → ' + (s.opp.atk + it.n) + '.' };
       case 'shoot':
         var p = CC.theirShot(s), w = CC.yourWall(s);
+        var cancel = p > w && CC.goalCancelReady(s);
         return { head: head, detail: it.n + '+' + (s.opp.atk + s.opp.perm) + ' = ' + p + ' vs SHP ' + s.shp + ' + GK ' + s.gk + ' = ' + w + '. ' +
-          (p > w ? 'GOAL unless you add ' + (p - w) + ' SHP.' : 'Saved.'), danger: p > w };
+          (p > w ? 'GOAL unless you add ' + (p - w) + ' SHP.' + (cancel ? ' ' + CC.squadHook(s, 'gk').name + ' cancels the first goal this match.' : '') : 'Saved.'),
+          danger: p > w && !cancel };
       case 'waste':
         return { head: head, detail: 'Clock runs an extra turn.', danger: true };
       case 'press':
@@ -158,7 +167,10 @@
         var lose = it.n > s.control;
         var d = it.n + ' vs your CONTROL ' + s.control + '. ' +
           (lose ? 'You lose the ball unless you add ' + (it.n - s.control) + ' CONTROL.' : 'You keep the ball.');
-        if (it.type === 'dirty') d += ' Target: ' + (it.target || '-') + '. SHAPE gained > ' + it.n + ' blocks the injury.';
+        if (it.type === 'dirty') {
+          var hurt = lose && s.shpGained <= it.n;
+          d += ' Target: ' + CC.squadName(it.target) + '. ' + (hurt ? 'INJURY unless you keep the ball or gain ' + (it.n + 1 - s.shpGained) + ' more SHP this turn.' : 'No injury.');
+        }
         return { head: head, detail: d, danger: lose };
       case 'park':
         return { head: head, detail: '+' + it.n + ' DEF through your next turn.' };

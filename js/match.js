@@ -4,10 +4,10 @@
   'use strict';
 
   CC.ZONES = ['DEF THIRD', 'MIDFIELD', 'ATT THIRD'];
-  // gk: your keeper's flat save value. Moves to the Brick Walls relic in Milestone 5.
-  CC.MATCH_RULES = { turns: 12, handSize: 5, energy: 3, minutes: 90, gk: 4 };
+  // Your GK comes from the squad keeper (data_squad.js).
+  CC.MATCH_RULES = { turns: 12, handSize: 5, energy: 3, minutes: 90 };
 
-  // deck: card ids for this match. opts: { row, label } — row picks the opponent scaling (data_run.js).
+  // deck: card ids for this match. opts: { row, label, squad }. squad is copied; run.js copies it back. — row picks the opponent scaling (data_run.js).
   // The match state never holds the run; run.js owns deck, coins and the map.
   // Opponent numbers at a map row: base table + row scaling. Map preview and match both use it.
   CC.oppStats = function (oppId, row) {
@@ -42,8 +42,11 @@
       shotBonus: 0,          // Driven Cross: next shot this turn
       costDown: 0,           // Total Football: cards cost less this turn
       powers: {},            // power id -> value, for the rest of the match
-      turnPlays: { cards: 0, moves: 0, zones: 0 },
-      gk: CC.MATCH_RULES.gk,
+      turnPlays: { cards: 0, moves: 0, zones: 0, free: 0 },
+      squad: JSON.parse(JSON.stringify(opts.squad || CC.newSquad())),
+      cancelled: 0,          // goals against cancelled by the keeper this match
+      injuredNow: [],        // squad ids hurt this match (results screen)
+      gk: 0,
       energy: CC.MATCH_RULES.energy,
       draw: [],
       hand: [],
@@ -58,6 +61,7 @@
         intent: null, idx: {}
       }
     };
+    s.gk = CC.gkValue(s);
     var cards = deck.map(function (id) { return { uid: s.nextUid++, id: id }; });
     s.draw = CC.shuffle(s, cards);
     CC.log(s, s.label + '. Kick off vs ' + od.name + '. Seed ' + seed + '.');
@@ -93,6 +97,7 @@
     var c = CC.card(inst);
     var cost = c.cost;
     if (c.freeIfAtk && s.atk >= c.freeIfAtk) cost = 0;
+    if (CC.freeCard(s, c)) cost = 0;
     return Math.max(0, cost - s.costDown);
   };
 
@@ -128,6 +133,7 @@
     if (CC.cardBlock(s, inst)) return false;
     var c = CC.card(inst);
     s.energy -= CC.cardCost(s, inst);
+    if (CC.freeCard(s, c)) s.turnPlays.free++;
     s.hand.splice(idx, 1);
     (c.exhaust || c.type === 'power' ? s.exhaust : s.discard).push(inst);
     var res = CC.EFFECTS[c.effect](s, c.params || {}, c);
@@ -184,7 +190,7 @@
   };
 
   CC.startTurn = function (s) {
-    var keep = Math.floor(s.shp / 2);
+    var keep = CC.decayKeep(s);
     if (s.powers.the_wall) keep = Math.max(keep, Math.min(s.shp, s.powers.the_wall));
     var decayed = s.shp - keep;
     s.shp = keep;
@@ -192,7 +198,7 @@
     s.shpGained = 0;
     s.shotBonus = 0;
     s.costDown = 0;
-    s.turnPlays = { cards: 0, moves: 0, zones: 0 };
+    s.turnPlays = { cards: 0, moves: 0, zones: 0, free: 0 };
     s.energy = CC.MATCH_RULES.energy;
     if (decayed) CC.log(s, 'SHP decays by ' + decayed + '.');
     if (s.powers.prime_form && s.ball.side === 'you') {

@@ -89,6 +89,7 @@
     return '<p class="side-label">THE CUP</p>' +
       '<h2>' + (run.path.length ? 'Pick the next match' : 'Pick your first match') + '</h2>' +
       '<p>Click a lit node to see the opponent. Lines show where each path leads. Every path ends at the FINAL. Lose once and the run is over.</p>' +
+      CC.renderSquadList(run.squad) +
       '<p class="dim">Market, training, events and rivals arrive in later milestones. For now every node is a match.</p>' +
       hist;
   }

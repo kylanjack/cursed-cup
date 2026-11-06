@@ -13,6 +13,9 @@
       deck: test ? CC.testDeck(seed) : CC.STARTER_DECK.slice(),
       coins: test ? CC.COINS.test : CC.COINS.start,
       won: 0,
+      squad: CC.newSquad(),
+      // Run stats for achievements and meta-progression later.
+      stats: { wins: 0, goalsFor: 0, goalsAgainst: 0, cleanSheets: 0, injuries: 0, careerOvers: 0, goalsCancelled: 0 },
       path: [],             // node ids entered, in order. Last one is the current/last node.
       scene: 'map',         // 'map' | 'match'
       match: null,
@@ -36,7 +39,7 @@
     run.reward = null;
     var seed = (Math.floor(CC.rand(run) * 0xffffffff) >>> 0) || 1;
     var label = (node.type === 'final' ? 'FINAL' : 'Match ' + (node.row + 1)) + ' of ' + CC.MAP_RULES.rows;
-    run.match = CC.newMatch(seed, node.opp, run.deck, { row: node.row, label: label });
+    run.match = CC.newMatch(seed, node.opp, run.deck, { row: node.row, label: label, squad: run.squad });
     run.scene = 'match';
     return true;
   };
@@ -47,7 +50,19 @@
     if (!m || !m.over || m.settled) return;
     m.settled = true;
     var node = CC.currentNode(run);
-    run.history.push({ node: node.id, opp: m.opp.id, you: m.score.you, them: m.score.them, result: m.result });
+    run.history.push({ node: node.id, opp: m.opp.id, you: m.score.you, them: m.score.them, result: m.result,
+      hurt: m.injuredNow.slice() });
+    run.squad = JSON.parse(JSON.stringify(m.squad));
+    var st = run.stats;
+    st.goalsFor += m.score.you;
+    st.goalsAgainst += m.score.them;
+    st.goalsCancelled += m.cancelled;
+    st.injuries += m.injuredNow.length;
+    m.injuredNow.forEach(function (id) { if (CC.squadMember(m, id).status === 'gone') st.careerOvers++; });
+    if (m.result === 'win') {
+      st.wins++;
+      if (m.score.them === 0) st.cleanSheets++;
+    }
     if (m.result !== 'win') { run.result = 'lost'; return; }
     run.won++;
     var coins = CC.matchCoins(m);

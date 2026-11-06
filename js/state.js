@@ -6,7 +6,7 @@ window.CC = window.CC || {};
 
   CC.SAVE_KEY = 'cursedcup_run';
   CC.OLD_KEYS = ['cursedcup_match'];   // pre-M4 saves, removed on boot
-  CC.SAVE_VERSION = 4;
+  CC.SAVE_VERSION = 5;
 
   // New seed for a new run/match. The only use of Math.random in the game.
   CC.newSeed = function () {
@@ -56,7 +56,7 @@ window.CC = window.CC || {};
       var run = JSON.parse(raw);
       if (!run || typeof run !== 'object') return { run: null, status: 'corrupt' };
       if (run.version !== CC.SAVE_VERSION) return { run: null, status: 'old' };
-      if (!run.map || !run.map.rows || !Array.isArray(run.deck) || !Array.isArray(run.path)) return { run: null, status: 'corrupt' };
+      if (!run.map || !run.map.rows || !Array.isArray(run.deck) || !Array.isArray(run.path) || !Array.isArray(run.squad)) return { run: null, status: 'corrupt' };
       if (run.scene === 'match' && (!run.match || !run.match.opp || !CC.OPPONENTS[run.match.opp.id])) return { run: null, status: 'corrupt' };
       return { run: run, status: 'ok' };
     } catch (e) {

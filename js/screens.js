@@ -22,11 +22,12 @@
   }
 
   function summary(run) {
-    var gf = 0, ga = 0;
-    run.history.forEach(function (h) { gf += h.you; ga += h.them; });
+    var st = run.stats;
     return '<div class="opp-stats summary">' +
       '<span>MATCHES WON</span><b>' + run.won + ' / ' + CC.MAP_RULES.rows + '</b>' +
-      '<span>GOALS</span><b>' + gf + ' - ' + ga + '</b>' +
+      '<span>GOALS</span><b>' + st.goalsFor + ' - ' + st.goalsAgainst + '</b>' +
+      '<span>CLEAN SHEETS</span><b>' + st.cleanSheets + '</b>' +
+      '<span>INJURIES · CAREER OVERS</span><b>' + st.injuries + ' · ' + st.careerOvers + '</b>' +
       '<span>COINS</span><b>' + run.coins + '</b>' +
       '<span>DECK</span><b>' + run.deck.length + ' cards</b>' +
       '</div>' +
@@ -42,6 +43,11 @@
     var win = s.result === 'win';
     var champ = run.result === 'champion';
     var last = s.log[s.log.length - 1];
+    var hurt = s.injuredNow.map(function (id) {
+      var p = CC.squadMember(s, id);
+      return CC.squadName(id) + (p.status === 'gone' ? ': CAREER OVER' : ': injured');
+    });
+    var hurtLine = hurt.length ? '<p class="ov-hurt">' + esc(hurt.join(' · ')) + '</p>' : '';
     var body;
     if (champ) {
       body = '<p>You won the cup. The sky closes. Kaz goes home.</p>' + summary(run) +
@@ -55,7 +61,7 @@
       '<h2>' + (champ ? 'CUP WON' : (win ? 'YOU WIN' : 'RUN OVER')) + '</h2>' +
       '<p class="overlay-score">' + s.score.you + ' - ' + s.score.them + '</p>' +
       '<p>' + esc(last ? last.text : '') + '</p>' +
-      body +
+      hurtLine + body +
       '<div class="ov-row">' +
       '<button class="btn btn-ghost" type="button" data-view="deck">Deck ' + run.deck.length + '</button>' +
       '<button class="btn btn-ghost" type="button" data-act="close">See the log</button>' +

@@ -76,7 +76,8 @@ const turns = +process.argv[3] || 200;
         await shot('match'); await noScroll('match');
         midShot = true;
       }
-      await p.click('#btn-end');
+      // A golden goal can end the match mid-turn: the results overlay is already up.
+      if (!(await p.$('#overlay:not([hidden])'))) await p.click('#btn-end');
     }
     await shot('end');
     const info = await p.textContent('#runinfo');

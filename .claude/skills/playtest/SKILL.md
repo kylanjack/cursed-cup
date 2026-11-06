@@ -16,12 +16,14 @@ node .claude/skills/playtest/sim.js 2000
 Plays each opponent with the starter deck and prints win rate, golden-goal rate, goals, score distribution and per-match event counts.
 Arguments: `sim.js [matches] [seedToPrintLog|0] [opponent|all] [mapRow]`, e.g. `sim.js 1000 0 hollow 5` for The Hollow XI at round 6 scaling.
 
-The bot is greedy and dumb; a human should beat its win rate. Reference after M4 tuning, row 0: Rustborough ~59%, Hollow XI ~46%, Saltmarsh ~62%.
+The bot is greedy and dumb; a human should beat its win rate. Reference after M5a tuning (full fit squad), row 0: all three opponents ~77%.
+
+Tuning knobs (env vars, no data edits): `SQUAD=santi_vane,dax_marrow` plays with only those players fit (`none` for nobody); `TUNE=def:3,shot:2,gk:1,control:0` adds to every opponent. Find numbers with these, then write them into the data files.
 Red flags: win rate above 80% or below 35%, 0-0 above 10%, opponent averaging under 0.5 goals. Any opponent CONTROL at or above a STEAL card's number switches that card off entirely — check row scaling.
 
 Run mode plays full map runs (random node, random reward pick):
 `node .claude/skills/playtest/sim.js run 1000`
-Reference M4 (no relics yet): ~1.1 matches won of 8, cup won ~0%. Prints which opponent ends runs.
+Reference M5a: ~1.8 matches won of 8, ~0.8 injuries and ~0.15 career overs per run. Prints which opponent ends runs. The run bot plays reward cards badly, so it sits well below the single-match numbers.
 
 The bot plays starter cards by plan and other cards greedily. Extend `botTurn` when new cards need smarter use.
 

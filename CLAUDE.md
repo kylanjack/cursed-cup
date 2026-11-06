@@ -54,6 +54,7 @@ js/run.js         — run state object: deck, coins, map path, current match, se
 js/data_cards.js  — card definition table
 js/data_opponents.js — opponent definition table (intents, stats)
 js/data_squad.js  — player (relic) definition table, traits, recruits
+js/squad.js       — squad hooks the engine calls (GK, decay, free pass, shot bonus, advance ATK) and injuries
 js/data_events.js — dressing-room event table
 js/match.js       — match engine: turns, energy, zones, shots, full time
 js/effects.js     — card effect handlers (dispatched by effect name)
@@ -61,6 +62,7 @@ js/opponent.js    — opponent intents: pick, validate, execute, preview
 js/data_run.js    — map rules, opponent scaling per map row, coins table
 js/map.js         — run map generation and path rules (no DOM)
 js/ui_map.js      — run map screen rendering
+js/ui_squad.js    — squad strip (match) and squad list (map)
 js/reward.js      — post-match card rewards, market, training logic
 js/ui.js          — DOM builders: card render, tooltips, log, scoreboard
 js/screens.js     — overlays: results/reward, pile and deck viewer

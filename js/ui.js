@@ -4,7 +4,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
 
-  CC.ui = { msgUid: null, msgText: '', view: null, overlayClosed: false, notice: '', selected: null };
+  CC.ui = { msgUid: null, msgText: '', view: null, overlayClosed: false, notice: '', selected: null, squadInfo: null };
 
   var esc = CC.esc = function (str) {
     return String(str).replace(/[&<>"']/g, function (ch) {
@@ -111,6 +111,10 @@
       stat('DEF', (o.def + o.bus) + (o.bus ? '<small>+' + o.bus + '</small>' : '')) +
       stat('CTRL', o.control) +
       stat('GK', o.gk);
+
+    var it = s.opp.intent;
+    var target = !s.over && it && it.type === 'dirty' && CC.intentValid(s) && !it.cancelled ? it.target : null;
+    $('squad').innerHTML = CC.renderSquadStrip(s.squad, target);
 
     var st = renderStatus(s);
     $('status').innerHTML = st;
