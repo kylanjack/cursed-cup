@@ -83,5 +83,21 @@
     return d.name + ' is injured. Out for the rest of the run.';
   };
 
+  // What fit squad players add to this card right now, for the hand. [{ who, text }]
+  CC.squadCardNotes = function (s, c) {
+    var out = [];
+    var first = function (d) { return d.name.split(' ')[0]; };
+    if (CC.freeCard(s, c)) out.push({ who: first(CC.squadHook(s, 'freePass')), text: 'costs 0' });
+    var p = c.params || {};
+    var moves = c.effect === 'oneTwo' ? s.turnPlays.moves > 0 : (p.zones || typeof p.toZone === 'number');
+    if (moves && s.ball.side === 'you' && s.ball.zone < 2 && CC.advanceBonus(s)) {
+      out.push({ who: first(CC.squadHook(s, 'advanceAtk')), text: '+' + CC.advanceBonus(s) + ' ATK' });
+    }
+    if (c.type === 'shot' && CC.shotSquadBonus(s)) {
+      out.push({ who: first(CC.squadHook(s, 'shotPower')), text: '+' + CC.shotSquadBonus(s) + ' power' });
+    }
+    return out;
+  };
+
   CC.squadName = function (id) { return CC.SQUAD[id] ? CC.SQUAD[id].name : 'your player'; };
 })(window.CC);

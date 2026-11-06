@@ -28,6 +28,24 @@
     return '';
   }
 
+  // Rule tags read from the card table: where it can be played, once per match, lasts the match.
+  function cardTags(c) {
+    var tags = [];
+    if (typeof c.zone === 'number') tags.push(CC.ZONES[c.zone] + ' ONLY');
+    if (c.needsPossession === false) tags.push('WITHOUT THE BALL');
+    if (c.exhaust) tags.push('ONCE PER MATCH');
+    if (c.type === 'power') tags.push('LASTS THE MATCH');
+    return tags.length ? '<span class="card-tags">' + tags.map(function (t) { return '<span>' + t + '</span>'; }).join('') + '</span>' : '';
+  }
+
+  // Live squad bonuses on a card in hand, e.g. "Dax +3 ATK". Gone when that player is out.
+  function squadNotes(s, c) {
+    var n = CC.squadCardNotes(s, c);
+    return n.length ? '<span class="card-squad">' + n.map(function (x) {
+      return '<span><b>' + esc(x.who) + '</b> ' + esc(x.text) + '</span>';
+    }).join('') + '</span>' : '';
+  }
+
   // live: card in hand (blocked state, current cost, live numbers). Otherwise a static card (reward, viewer).
   // attr: extra attribute string for the button, e.g. data-pick="id".
   CC.renderCard = function (s, inst, live, attr) {
@@ -41,6 +59,8 @@
       '<span class="card-type">' + c.type.toUpperCase() +
         '<span class="card-rarity">' + c.rarity.toUpperCase() + '</span></span>' +
       '<span class="card-text">' + esc(c.text) + '</span>' +
+      cardTags(c) +
+      (live ? squadNotes(s, c) : '') +
       (live ? cardCalc(s, c) : '') +
       '</button>';
   };

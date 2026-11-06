@@ -342,3 +342,10 @@ button {
 .pl.targeted .pl-st { color: var(--danger); font-weight: 700; }
 .pl-info { border-left: 3px solid var(--accent); background: var(--panel); padding: 6px 10px; font-size: 12px; line-height: 1.4; }
 .ov-hurt { color: var(--danger); font-family: var(--f-mono); font-size: 13px; font-weight: 700; }
+
+/* Card rule tags and live squad bonuses */
+.card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.card-tags span { font-family: var(--f-mono); font-size: 9px; border: 1px solid var(--border); color: var(--dim); padding: 1px 4px; }
+.card-squad { display: flex; flex-wrap: wrap; gap: 4px 8px; margin-top: auto; font-family: var(--f-mono); font-size: 11px; color: var(--accent); }
+.card-squad b { color: var(--text); font-weight: 700; }
+.card-squad + .card-calc { margin-top: 4px; }
