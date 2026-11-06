@@ -46,9 +46,11 @@ V1 ships as a web game on GitHub Pages. The end goal is a paid Steam release, by
 
 ```
 index.html
-css/style.css
+css/style.css     — shell, match screen, cards, overlays
+css/map.css       — run map screen
 js/main.js        — boot, scene router (title / map / match / reward / market / event / gameover)
-js/state.js       — run state object, seeded RNG, save/load to localStorage
+js/state.js       — seeded RNG, save/load to localStorage (corrupt/old saves recover to a new run)
+js/run.js         — run state object: deck, coins, map path, current match, settle results
 js/data_cards.js  — card definition table
 js/data_opponents.js — opponent definition table (intents, stats)
 js/data_squad.js  — player (relic) definition table, traits, recruits
@@ -56,7 +58,9 @@ js/data_events.js — dressing-room event table
 js/match.js       — match engine: turns, energy, zones, shots, full time
 js/effects.js     — card effect handlers (dispatched by effect name)
 js/opponent.js    — opponent intents: pick, validate, execute, preview
-js/map.js         — run map generation and rendering
+js/data_run.js    — map rules, opponent scaling per map row, coins table
+js/map.js         — run map generation and path rules (no DOM)
+js/ui_map.js      — run map screen rendering
 js/reward.js      — post-match card rewards, market, training logic
 js/ui.js          — DOM builders: card render, tooltips, log, scoreboard
 js/screens.js     — overlays: results/reward, pile and deck viewer

@@ -4,8 +4,9 @@ window.CC = window.CC || {};
 (function (CC) {
   'use strict';
 
-  CC.SAVE_KEY = 'cursedcup_match';
-  CC.SAVE_VERSION = 3;
+  CC.SAVE_KEY = 'cursedcup_run';
+  CC.OLD_KEYS = ['cursedcup_match'];   // pre-M4 saves, removed on boot
+  CC.SAVE_VERSION = 4;
 
   // New seed for a new run/match. The only use of Math.random in the game.
   CC.newSeed = function () {
@@ -31,25 +32,42 @@ window.CC = window.CC || {};
     return a;
   };
 
-  CC.save = function (s) {
+  CC.save = function (run) {
     try {
-      localStorage.setItem(CC.SAVE_KEY, JSON.stringify(s));
+      localStorage.setItem(CC.SAVE_KEY, JSON.stringify(run));
     } catch (e) { /* storage blocked or full: game still runs, just won't persist */ }
   };
 
+  // Returns { run, status }. status: 'none' (no save), 'ok', 'old' (older version, dropped),
+  // 'corrupt' (unreadable or broken, dropped). Main starts a fresh run and tells the player.
   CC.load = function () {
+    var raw;
+    try { raw = localStorage.getItem(CC.SAVE_KEY); } catch (e) { return { run: null, status: 'none' }; }
+    if (!raw) {
+      var old = false;
+      try {
+        CC.OLD_KEYS.forEach(function (k) {
+          if (localStorage.getItem(k)) { old = true; localStorage.removeItem(k); }
+        });
+      } catch (e) { /* ignore */ }
+      return { run: null, status: old ? 'old' : 'none' };
+    }
     try {
-      var raw = localStorage.getItem(CC.SAVE_KEY);
-      if (!raw) return null;
-      var s = JSON.parse(raw);
-      if (!s || s.version !== CC.SAVE_VERSION) return null;
-      return s;
+      var run = JSON.parse(raw);
+      if (!run || typeof run !== 'object') return { run: null, status: 'corrupt' };
+      if (run.version !== CC.SAVE_VERSION) return { run: null, status: 'old' };
+      if (!run.map || !run.map.rows || !Array.isArray(run.deck) || !Array.isArray(run.path)) return { run: null, status: 'corrupt' };
+      if (run.scene === 'match' && (!run.match || !run.match.opp || !CC.OPPONENTS[run.match.opp.id])) return { run: null, status: 'corrupt' };
+      return { run: run, status: 'ok' };
     } catch (e) {
-      return null;
+      return { run: null, status: 'corrupt' };
     }
   };
 
   CC.clearSave = function () {
-    try { localStorage.removeItem(CC.SAVE_KEY); } catch (e) { /* ignore */ }
+    try {
+      localStorage.removeItem(CC.SAVE_KEY);
+      CC.OLD_KEYS.forEach(function (k) { localStorage.removeItem(k); });
+    } catch (e) { /* ignore */ }
   };
 })(window.CC);

@@ -4,7 +4,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
 
-  CC.ui = { msgUid: null, msgText: '', view: null, overlayClosed: false };
+  CC.ui = { msgUid: null, msgText: '', view: null, overlayClosed: false, notice: '', selected: null };
 
   var esc = CC.esc = function (str) {
     return String(str).replace(/[&<>"']/g, function (ch) {
@@ -21,7 +21,7 @@
         (extra ? '+' + extra : '') + '=' + p + ' vs ' + w + (p > w ? ' GOAL' : ' SAVED') + '</span>';
     }
     if (c.effect === 'steal') {
-      var ctrl = CC.oppDef(s).control, win = c.params.steal > ctrl;
+      var ctrl = s.opp.control, win = c.params.steal > ctrl;
       return '<span class="card-calc' + (win ? ' good' : '') + '">' + c.params.steal + ' vs CTRL ' + ctrl +
         (win ? ' WIN' : ' FAIL') + '</span>';
     }
@@ -79,34 +79,38 @@
       '</span><span class="stat-val">' + value + '</span></div>';
   }
 
-  CC.render = function (s) {
+  // Scoreboard and clock in the top bar, match scene only.
+  function renderScore(s) {
     $('score-you').textContent = s.score.you;
     $('score-them').textContent = s.score.them;
     $('opp-short').textContent = s.opp.short;
     $('clock-min').textContent = CC.clockLabel(s) + "'";
     $('clock-turn').textContent = s.over ? 'FT' : (s.golden ? 'GOLDEN GOAL' : 'T' + s.turn + '/' + CC.MATCH_RULES.turns);
+  }
 
+  CC.renderMatch = function (s) {
+    renderScore(s);
     var ip = CC.intentPreview(s);
     var box = $('intent');
     box.className = 'intent' + (ip.lost ? ' lost' : '') + (ip.danger ? ' danger' : '');
     box.innerHTML = '<div class="intent-top"><span class="intent-label">' + esc(s.opp.name.toUpperCase()) +
-      '</span><span class="intent-head">' + (s.over ? '-' : esc(ip.head)) + '</span></div>' +
+      ' · NEXT</span><span class="intent-head">' + (s.over ? '-' : esc(ip.head)) + '</span></div>' +
       '<div class="intent-val">' + (s.over ? 'Match over.' : esc(ip.detail)) + '</div>';
 
     $('pitch').innerHTML = renderPitch(s);
 
-    var od = CC.oppDef(s);
+    var o = s.opp;
     $('stats').innerHTML =
       '<span class="stats-side">YOU</span>' +
       stat('ATK', s.atk, 'accent') +
       stat('SHP', s.shp) +
       stat('CTRL', s.control) +
       stat('GK', s.gk) +
-      '<span class="stats-side">' + esc(s.opp.short) + '</span>' +
-      stat('ATK', s.opp.atk + (s.opp.perm ? '<small>+' + s.opp.perm + '</small>' : ''), 'danger') +
-      stat('DEF', (od.def + s.opp.bus) + (s.opp.bus ? '<small>+' + s.opp.bus + '</small>' : '')) +
-      stat('CTRL', od.control) +
-      stat('GK', od.gk);
+      '<span class="stats-side">' + esc(o.short) + '</span>' +
+      stat('ATK', o.atk + (o.perm ? '<small>+' + o.perm + '</small>' : ''), 'danger') +
+      stat('DEF', (o.def + o.bus) + (o.bus ? '<small>+' + o.bus + '</small>' : '')) +
+      stat('CTRL', o.control) +
+      stat('GK', o.gk);
 
     var st = renderStatus(s);
     $('status').innerHTML = st;
@@ -122,8 +126,7 @@
     $('piles').innerHTML =
       '<button type="button" class="pile" data-view="draw">DRAW <b>' + s.draw.length + '</b></button>' +
       '<button type="button" class="pile" data-view="discard">DISCARD <b>' + s.discard.length + '</b></button>' +
-      (s.exhaust.length ? '<button type="button" class="pile" data-view="exhaust">OUT <b>' + s.exhaust.length + '</b></button>' : '') +
-      '<button type="button" class="pile" data-view="deck">DECK <b>' + s.run.deck.length + '</b></button>';
+      (s.exhaust.length ? '<button type="button" class="pile" data-view="exhaust">OUT <b>' + s.exhaust.length + '</b></button>' : '');
 
     $('hand').innerHTML = s.hand.length
       ? s.hand.map(function (inst) { return CC.renderCard(s, inst, true); }).join('')
@@ -133,18 +136,41 @@
     if (CC.ui.msgText) { msg.textContent = CC.ui.msgText; msg.hidden = false; }
     else { msg.hidden = true; }
 
-    $('log').innerHTML = s.log.slice(-12).reverse().map(function (e) {
+    $('log').innerHTML = s.log.slice(-30).reverse().map(function (e) {
       return '<div class="log-line' + (e.kind ? ' ' + e.kind : '') + '"><span class="log-min">' + e.min + "'</span>" + esc(e.text) + '</div>';
     }).join('');
 
     $('btn-end').textContent = s.over ? 'Results' : 'End turn';
-    $('seed').textContent = (s.run.test ? 'TEST RUN · ' : '') + 'SEED ' + s.seed;
-    var added = s.run.deck.length - CC.STARTER_DECK.length;
-    $('runline').innerHTML = '<span class="run-top"><b>MATCH ' + (s.run.won + (s.over && s.result === 'win' ? 0 : 1)) + '</b> · WON ' + s.run.won +
-      ' · NEW CARDS ' + added + (s.run.test ? ' · TEST RUN' : '') + '</span>' +
-      '<span>Win: pick 1 of 3 new cards. Lose: run over, back to the starter deck.</span>';
-    CC.renderOverlay(s);
-    CC.renderViewer(s);
+  };
+
+  // Top bar run info, both scenes.
+  function renderRunInfo(run) {
+    var node = CC.currentNode(run);
+    var row = run.scene === 'match' && node ? node.row + 1 : run.path.length + (run.result ? 0 : 1);
+    row = Math.min(row, CC.MAP_RULES.rows);
+    $('runinfo').innerHTML =
+      '<span><b>' + (run.scene === 'match' && run.match ? esc(run.match.label.toUpperCase()) : 'ROUND ' + row + '/' + CC.MAP_RULES.rows) + '</b></span>' +
+      '<span>WON <b>' + run.won + '</b></span>' +
+      '<span>COINS <b>' + run.coins + '</b></span>' +
+      (run.test ? '<span class="test">TEST RUN</span>' : '');
+    $('btn-deck').innerHTML = 'Deck <b>' + run.deck.length + '</b>';
+    $('seed').textContent = 'RUN SEED ' + run.seed + (run.match ? ' · MATCH ' + run.match.seed : '');
+  }
+
+  CC.render = function (run) {
+    var inMatch = run.scene === 'match' && run.match;
+    $('app').className = 'app ' + (inMatch ? 'mode-match' : 'mode-map');
+    $('scene-match').hidden = !inMatch;
+    $('scene-map').hidden = !!inMatch;
+    $('scoreboard').hidden = !inMatch;
+    renderRunInfo(run);
+    if (inMatch) CC.renderMatch(run.match);
+    else CC.renderMap(run);
+    var n = $('notice');
+    n.hidden = !CC.ui.notice;
+    n.textContent = CC.ui.notice || '';
+    CC.renderOverlay(run);
+    CC.renderViewer(run);
   };
 
   // Tap-to-toggle reason for a blocked card.

@@ -48,7 +48,7 @@
     },
 
     steal: function (s, p) {
-      var ctrl = CC.oppDef(s).control;
+      var ctrl = s.opp.control;
       var extra = '';
       if (p.shp) { s.shp += p.shp; s.shpGained += p.shp; extra = ' +' + p.shp + ' SHP.'; }
       if (p.steal > ctrl) {

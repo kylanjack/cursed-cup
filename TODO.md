@@ -39,6 +39,8 @@ Not in V1. Don't build anything here until V1 ships.
 
 ## Harder opponents
 
+- Map difficulty (from M4): row scaling is gentle until relics and market exist. Sim bot clears ~1.1 of 8 matches. Decide in the M6 balance pass how often a good player should win the cup.
+
 - Rivals (V1 spec, M6): each rival gets a rule twist, not a longer match. Ideas: they act twice per turn, no golden goal (draw = loss), hostile crowd (-1 energy turn 1).
 
 ## StS-style ideas — after V1
@@ -65,7 +67,6 @@ Not in V1. Don't build anything here until V1 ships.
 - Version number in the corner for bug reports. (Any time, tiny.)
 - Settings: mute, reduced motion, text size. (M6.)
 - Colour-blind check: accent #ff6b2b and danger #e05a3a are close. Always pair with text (GOAL / SAVED), never colour alone. (Visual pass.)
-- Corrupted-save recovery: if load fails, offer a fresh start instead of a blank screen. (M4, with run save.)
 - Save migration instead of wiping old saves. (Before any public release.)
 - Desktop: keyboard shortcuts (1–5 play card, Space end turn). (Steam phase.)
 - UI strings in one table so translation is possible later. (Steam phase.)

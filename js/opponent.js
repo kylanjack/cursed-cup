@@ -39,7 +39,7 @@
     var it;
     if (s.ball.side === 'them') {
       if (s.ball.zone <= od.shootZone) {
-        it = { type: 'shoot', n: next(s, name + '.shoot', pat.shoot) };
+        it = { type: 'shoot', n: next(s, name + '.shoot', pat.shoot) + (s.opp.shotAdd || 0) };
       } else {
         // Skip TIME WASTING entries unless they lead. Bounded so a bad table can't loop.
         for (var k = 0; k < pat.withBall.length + 1; k++) {

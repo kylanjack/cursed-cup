@@ -1,4 +1,4 @@
-// match.js — match engine: turns, energy, hand, zones, shots, full time, rewards.
+// match.js — match engine: turns, energy, hand, zones, shots, full time.
 // Card effects live in effects.js. Opponent intents live in opponent.js.
 (function (CC) {
   'use strict';
@@ -7,18 +7,32 @@
   // gk: your keeper's flat save value. Moves to the Brick Walls relic in Milestone 5.
   CC.MATCH_RULES = { turns: 12, handSize: 5, energy: 3, minutes: 90, gk: 4 };
 
-  // run: { deck: [card ids], won: matches won so far }. Omit for a fresh starter run.
-  CC.newMatch = function (seed, oppId, run) {
+  // deck: card ids for this match. opts: { row, label } — row picks the opponent scaling (data_run.js).
+  // The match state never holds the run; run.js owns deck, coins and the map.
+  // Opponent numbers at a map row: base table + row scaling. Map preview and match both use it.
+  CC.oppStats = function (oppId, row) {
+    var od = CC.OPPONENTS[oppId];
+    var sc = (CC.ROW_SCALE && CC.ROW_SCALE[row || 0]) || { def: 0, shot: 0, control: 0 };
+    var shots = od.patterns.normal.shoot;
+    return {
+      def: od.def + sc.def, gk: od.gk, control: od.control + sc.control, shotAdd: sc.shot,
+      shotMin: Math.min.apply(null, shots) + sc.shot, shotMax: Math.max.apply(null, shots) + sc.shot
+    };
+  };
+
+  CC.newMatch = function (seed, oppId, deck, opts) {
+    opts = opts || {};
     var od = CC.OPPONENTS[oppId || 'rustborough'];
-    run = run || { deck: CC.STARTER_DECK.slice(), won: 0 };
+    var st = CC.oppStats(od.id, opts.row);
     var s = {
-      version: CC.SAVE_VERSION,
       seed: seed,
       rng: seed,
+      label: opts.label || 'Match',
       turn: 1,
       golden: false,
       over: false,
       result: null,          // 'win' | 'lose'
+      settled: false,        // run.js has paid out this result
       score: { you: 0, them: 0 },
       ball: { zone: 1, side: 'you' },
       atk: 0,
@@ -29,8 +43,6 @@
       costDown: 0,           // Total Football: cards cost less this turn
       powers: {},            // power id -> value, for the rest of the match
       turnPlays: { cards: 0, moves: 0, zones: 0 },
-      run: { deck: run.deck.slice(), won: run.won, test: !!run.test },
-      reward: null,          // { offer: [ids], picked: id | 'skip' | null } after a win
       gk: CC.MATCH_RULES.gk,
       energy: CC.MATCH_RULES.energy,
       draw: [],
@@ -41,13 +53,14 @@
       nextUid: 1,
       opp: {
         id: od.id, name: od.name, short: od.short,
+        def: st.def, gk: st.gk, control: st.control, shotAdd: st.shotAdd,
         atk: 0, perm: 0, bus: 0, busUntil: 0,
         intent: null, idx: {}
       }
     };
-    var deck = s.run.deck.map(function (id) { return { uid: s.nextUid++, id: id }; });
-    s.draw = CC.shuffle(s, deck);
-    CC.log(s, 'Match ' + (run.won + 1) + '. Kick off vs ' + od.name + '. Seed ' + seed + '.');
+    var cards = deck.map(function (id) { return { uid: s.nextUid++, id: id }; });
+    s.draw = CC.shuffle(s, cards);
+    CC.log(s, s.label + '. Kick off vs ' + od.name + '. Seed ' + seed + '.');
     CC.pickIntent(s);
     CC.drawCards(s, CC.MATCH_RULES.handSize);
     return s;
@@ -72,8 +85,7 @@
 
   // What your shot has to beat.
   CC.shotWall = function (s) {
-    var od = CC.oppDef(s);
-    return od.def + s.opp.bus + od.gk;
+    return s.opp.def + s.opp.bus + s.opp.gk;
   };
 
   // Current cost after Simple Finish's rule and Total Football.
@@ -99,7 +111,7 @@
   // Returns null if playable, otherwise a plain reason string.
   CC.cardBlock = function (s, inst) {
     var c = CC.card(inst);
-    if (s.over) return 'Match over. Start a new match.';
+    if (s.over) return 'Match over.';
     var cost = CC.cardCost(s, inst);
     if (cost > s.energy) return 'Not enough energy. Costs ' + cost + ', you have ' + s.energy + '.';
     if (c.needsPossession === true && s.ball.side !== 'you') return 'Needs the ball.';
@@ -145,10 +157,6 @@
   CC.finish = function (s, result, why) {
     s.over = true;
     s.result = result;
-    if (result === 'win') {
-      s.run.won++;
-      s.reward = { offer: CC.rollReward(s), picked: null };
-    }
     CC.log(s, why + ' ' + s.score.you + '-' + s.score.them + '.', result === 'win' ? 'goal' : 'bad');
   };
 

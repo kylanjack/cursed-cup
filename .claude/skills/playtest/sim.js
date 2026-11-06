@@ -1,12 +1,12 @@
 // Headless balance sim: loads the game's engine files in Node, plays N matches with a greedy bot.
-// Usage: node .claude/skills/playtest/sim.js [matches=2000] [seedToPrintLog]
-//        node .claude/skills/playtest/sim.js run [runs=500]   — chained matches, bot picks a random reward each win
+// Usage: node .claude/skills/playtest/sim.js [matches=2000] [seedToPrintLog|0] [opponent=all] [row=0]
+//        node .claude/skills/playtest/sim.js run [runs=500]   — full map runs, bot picks a random node and reward
 // The bot plays starter cards by plan and any other card greedily. Extend botTurn when cards need smarter use.
 const fs = require('fs'), path = require('path');
 const root = path.resolve(__dirname, '../../..');
 global.window = global;
 global.localStorage = { getItem() { return null; }, setItem() {}, removeItem() {} };
-for (const f of ['state', 'data_cards', 'data_opponents', 'match', 'effects', 'opponent', 'reward']) {
+for (const f of ['state', 'data_cards', 'data_opponents', 'data_run', 'match', 'effects', 'opponent', 'reward', 'map', 'run']) {
   eval(fs.readFileSync(path.join(root, 'js', f + '.js'), 'utf8'));
 }
 const CC = global.CC;
@@ -35,7 +35,7 @@ function botTurn(s) {
       const other = find(s, c => c.rarity !== 'starter' && c.type !== 'shot' && c.id !== 'clearance' && c.id !== 'cynical_foul'); if (other) { play(s, other); continue; }
       break;
     } else {
-      const t = find(s, c => c.effect === 'steal' && c.params.steal > CC.oppDef(s).control); if (t) { play(s, t); continue; }
+      const t = find(s, c => c.effect === 'steal' && c.params.steal > s.opp.control); if (t) { play(s, t); continue; }
       const j = find(s, c => c.id === 'jockey'); if (j) { play(s, j); continue; }
       const other = find(s, c => c.rarity !== 'starter' && c.type !== 'shot' && c.id !== 'cynical_foul'); if (other) { play(s, other); continue; }
       break;
@@ -45,38 +45,51 @@ function botTurn(s) {
 }
 
 function playOut(s) { let g = 0; while (!s.over && g++ < 40) botTurn(s); return s; }
-function runMatch(seed) { return playOut(CC.newMatch(seed)); }
+function runMatch(seed, opp, row) { return playOut(CC.newMatch(seed, opp, CC.STARTER_DECK, { row: row || 0 })); }
 
 if (process.argv[2] === 'run') {
-  const R = +process.argv[3] || 500, cap = 15, dist = {};
-  let total = 0;
+  const R = +process.argv[3] || 500, dist = {}, lostTo = {};
+  let total = 0, champs = 0;
   for (let i = 1; i <= R; i++) {
-    let s = playOut(CC.newMatch(i * 104729));
-    while (s.result === 'win' && s.run.won < cap) {
-      const o = s.reward.offer; CC.pickReward(s, o[Math.floor(CC.rand(s) * o.length)]);
-      s = playOut(CC.nextMatch(s));
+    const run = CC.newRun(i * 104729, false);
+    while (!run.result) {
+      const reach = CC.reachable(run);
+      CC.enterNode(run, reach[Math.floor(CC.rand(run) * reach.length)]);
+      playOut(run.match); CC.settleMatch(run);
+      if (run.result === 'lost') { const h = run.history[run.history.length - 1]; lostTo[h.opp] = (lostTo[h.opp] || 0) + 1; }
+      if (run.result) break;
+      const o = run.reward.offer; CC.pickReward(run, o[Math.floor(CC.rand(run) * o.length)]);
+      CC.toMap(run);
     }
-    total += s.run.won; dist[s.run.won] = (dist[s.run.won] || 0) + 1;
+    if (run.result === 'champion') champs++;
+    total += run.won; dist[run.won] = (dist[run.won] || 0) + 1;
   }
-  console.log('avg matches won per run ' + (total / R).toFixed(2) + ' (cap ' + cap + ')');
-  console.log('wins before loss: ' + Object.entries(dist).map(e => e[0] + ':' + e[1]).join('  '));
+  console.log('avg matches won per run ' + (total / R).toFixed(2) + ' of ' + CC.MAP_RULES.rows + '  cup won ' + (100 * champs / R).toFixed(1) + '%');
+  console.log('wins before end: ' + Object.entries(dist).map(e => e[0] + ':' + e[1]).join('  '));
+  console.log('runs ended by: ' + Object.entries(lostTo).map(e => e[0] + ':' + e[1]).join('  '));
   process.exit(0);
 }
 
 const N = +process.argv[2] || 2000;
-const res = { win: 0, lose: 0 }, scores = {}, ev = {};
-let golden = 0, goals = 0;
+const LOG = +process.argv[3] || 0;
+const OPPS = process.argv[4] && process.argv[4] !== 'all' ? [process.argv[4]] : Object.keys(CC.OPPONENTS);
+const ROW = +process.argv[5] || 0;
 const pats = [[/They shoot.*GOAL/, 'theirGoal'], [/They shoot.*Saved/, 'theirSave'], [/\d+ vs \d+\. GOAL/, 'yourGoal'],
   [/vs \d+\. Saved\. Their/, 'yourSave'], [/STEAL.*beats/, 'steal'], [/Ball lost/, 'pressWin'], [/INTENT LOST/, 'intentLost'],
   [/They build/, 'build'], [/park the bus/, 'bus'], [/waste time/, 'waste']];
-for (let i = 1; i <= N; i++) {
-  const s = runMatch(i * 7919);
-  res[s.result]++; if (s.golden) golden++;
-  const k = s.score.you + '-' + s.score.them; scores[k] = (scores[k] || 0) + 1;
-  goals += s.score.you + s.score.them;
-  s.log.forEach(l => pats.forEach(([r, key]) => { if (r.test(l.text)) ev[key] = (ev[key] || 0) + 1; }));
+for (const opp of OPPS) {
+  const res = { win: 0, lose: 0 }, scores = {}, ev = {};
+  let golden = 0, goals = 0, against = 0;
+  for (let i = 1; i <= N; i++) {
+    const s = runMatch(i * 7919, opp, ROW);
+    res[s.result]++; if (s.golden) golden++;
+    const k = s.score.you + '-' + s.score.them; scores[k] = (scores[k] || 0) + 1;
+    goals += s.score.you + s.score.them; against += s.score.them;
+    s.log.forEach(l => pats.forEach(([r, key]) => { if (r.test(l.text)) ev[key] = (ev[key] || 0) + 1; }));
+  }
+  console.log('== ' + opp + ' (row ' + ROW + ')');
+  console.log('win ' + (100 * res.win / N).toFixed(1) + '%  golden ' + (100 * golden / N).toFixed(1) + '%  avg goals ' + (goals / N).toFixed(2) + '  conceded ' + (against / N).toFixed(2));
+  console.log('scores: ' + Object.entries(scores).sort((a, b) => b[1] - a[1]).slice(0, 12).map(e => e[0] + ':' + e[1]).join('  '));
+  console.log('per match: ' + Object.entries(ev).map(([k, v]) => k + ' ' + (v / N).toFixed(2)).join('  '));
+  if (LOG) runMatch(LOG, opp, ROW).log.forEach(l => console.log(l.min + "'", l.text));
 }
-console.log('win ' + (100 * res.win / N).toFixed(1) + '%  golden ' + (100 * golden / N).toFixed(1) + '%  avg goals ' + (goals / N).toFixed(2));
-console.log('scores: ' + Object.entries(scores).sort((a, b) => b[1] - a[1]).slice(0, 12).map(e => e[0] + ':' + e[1]).join('  '));
-console.log('per match: ' + Object.entries(ev).map(([k, v]) => k + ' ' + (v / N).toFixed(2)).join('  '));
-if (process.argv[3]) runMatch(+process.argv[3]).log.forEach(l => console.log(l.min + "'", l.text));

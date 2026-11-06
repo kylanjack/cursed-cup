@@ -2,56 +2,60 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#171411">
   <title>Cursed Cup</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Manrope:wght@400;600;800&display=swap">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/map.css">
 </head>
 <body>
-  <main id="app" class="match">
+  <main id="app" class="app mode-map">
     <header class="topbar">
-      <div class="score">
+      <div class="brand">CURSED CUP</div>
+      <div class="score" id="scoreboard">
         <span class="team">YOU</span>
         <span class="goals" id="score-you">0</span>
         <span class="dash">-</span>
         <span class="goals" id="score-them">0</span>
         <span class="team" id="opp-short">RUS</span>
+        <span class="clock"><span id="clock-min">0'</span><span class="dim" id="clock-turn">T1/12</span></span>
       </div>
-      <div class="clock">
-        <span id="clock-min">0'</span>
-        <span class="dim" id="clock-turn">T1/12</span>
+      <div class="runinfo" id="runinfo"></div>
+      <div class="top-actions">
+        <button class="btn btn-ghost btn-small" id="btn-deck" type="button" data-view="deck">Deck</button>
+        <button class="btn btn-ghost btn-small" id="btn-new" type="button">New run</button>
       </div>
     </header>
 
-    <section class="intent" id="intent"></section>
+    <div class="notice" id="notice" hidden></div>
 
-    <section class="pitch" id="pitch"></section>
-
-    <section class="stats" id="stats"></section>
-
-    <section class="status" id="status" hidden></section>
-
-    <p class="runline" id="runline"></p>
-    <p class="rule">Level at 90': one extra turn each. First goal wins. Still level: you lose.</p>
-
-    <section class="hand-bar">
-      <div class="energy" id="energy"></div>
-      <div class="piles" id="piles"></div>
+    <section class="scene" id="scene-map" hidden>
+      <div class="map-wrap" id="map"></div>
+      <aside class="map-side" id="map-side"></aside>
     </section>
 
-    <div class="msg" id="msg" hidden></div>
-
-    <section class="hand" id="hand"></section>
-
-    <div class="actions">
-      <button class="btn btn-ghost" id="btn-new" type="button">New run</button>
-      <button class="btn btn-main" id="btn-end" type="button">End turn</button>
-    </div>
-
-    <section class="log" id="log"></section>
+    <section class="scene scene-match" id="scene-match" hidden>
+      <aside class="side">
+        <section class="intent" id="intent"></section>
+        <section class="stats" id="stats"></section>
+        <section class="status" id="status" hidden></section>
+        <p class="rule">Level at 90': one extra turn each. First goal wins. Still level: you lose.</p>
+        <section class="log" id="log"></section>
+      </aside>
+      <div class="board">
+        <section class="pitch" id="pitch"></section>
+        <div class="msg" id="msg" hidden></div>
+        <section class="hand" id="hand"></section>
+        <section class="hand-bar">
+          <div class="energy" id="energy"></div>
+          <div class="piles" id="piles"></div>
+          <button class="btn btn-main" id="btn-end" type="button">End turn</button>
+        </section>
+      </div>
+    </section>
 
     <div class="overlay" id="overlay" hidden></div>
     <div class="overlay viewer" id="viewer" hidden></div>
@@ -62,11 +66,15 @@
   <script src="js/state.js"></script>
   <script src="js/data_cards.js"></script>
   <script src="js/data_opponents.js"></script>
+  <script src="js/data_run.js"></script>
   <script src="js/match.js"></script>
   <script src="js/effects.js"></script>
   <script src="js/opponent.js"></script>
   <script src="js/reward.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/run.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/ui_map.js"></script>
   <script src="js/screens.js"></script>
   <script src="js/main.js"></script>
 </body>
