@@ -10,11 +10,18 @@
     CC.render(s);
   }
 
+  var TEST = /[?&]test=1\b/.test(location.search);
+
+  function freshMatch() {
+    var seed = CC.newSeed();
+    return CC.newMatch(seed, null, TEST ? CC.testRun(seed) : null);
+  }
+
   function startNew() {
     CC.clearReason();
     CC.ui.overlayClosed = false;
     CC.ui.view = null;
-    s = CC.newMatch(CC.newSeed());
+    s = freshMatch();
     commit();
   }
 
@@ -77,7 +84,8 @@
 
   function boot() {
     s = CC.load();
-    if (!s) s = CC.newMatch(CC.newSeed());
+    // A test link always gets a test run; a normal link never continues a test run.
+    if (!s || !!s.run.test !== TEST) s = freshMatch();
     document.getElementById('hand').addEventListener('click', onHandTap);
     document.getElementById('btn-end').addEventListener('click', onEndTurn);
     document.getElementById('btn-new').addEventListener('click', onNewTap);

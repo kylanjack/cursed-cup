@@ -137,7 +137,11 @@
     }).join('');
 
     $('btn-end').textContent = s.over ? 'Results' : 'End turn';
-    $('seed').textContent = 'SEED ' + s.seed;
+    $('seed').textContent = (s.run.test ? 'TEST RUN · ' : '') + 'SEED ' + s.seed;
+    var added = s.run.deck.length - CC.STARTER_DECK.length;
+    $('runline').innerHTML = '<span class="run-top"><b>MATCH ' + (s.run.won + (s.over && s.result === 'win' ? 0 : 1)) + '</b> · WON ' + s.run.won +
+      ' · NEW CARDS ' + added + (s.run.test ? ' · TEST RUN' : '') + '</span>' +
+      '<span>Win: pick 1 of 3 new cards. Lose: run over, back to the starter deck.</span>';
     CC.renderOverlay(s);
     CC.renderViewer(s);
   };

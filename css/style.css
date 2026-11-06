@@ -144,6 +144,10 @@ button {
 .chip.them { border-color: var(--danger); }
 .chip.them b { color: var(--danger); }
 
+.runline { margin: 0; font-family: var(--f-mono); font-size: 12px; display: flex; flex-direction: column; gap: 2px; }
+.runline b { color: var(--accent); }
+.runline .run-top { font-family: var(--f-mono); color: var(--dim); font-size: 12px; }
+.runline span:last-child { font-family: var(--f-body); color: var(--text); font-size: 12.5px; }
 .rule { margin: 0; font-size: 12px; color: var(--dim); }
 
 /* Energy + piles */

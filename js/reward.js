@@ -32,4 +32,16 @@
     var seed = (Math.floor(CC.rand(s) * 0xffffffff) >>> 0) || 1;
     return CC.newMatch(seed, s.opp.id, s.run);
   };
+
+  // Playtest run (?test=1 in the URL): starter deck + one power + extra random non-starter cards.
+  CC.TEST_RUN = { extra: 5 };
+  CC.testRun = function (seed) {
+    var tmp = { rng: seed };
+    var pool = Object.keys(CC.CARDS).filter(function (id) { return CC.CARDS[id].rarity !== 'starter'; });
+    var powers = pool.filter(function (id) { return CC.CARDS[id].type === 'power'; });
+    var deck = CC.STARTER_DECK.slice();
+    deck.push(powers[Math.floor(CC.rand(tmp) * powers.length)]);
+    var rest = CC.shuffle(tmp, pool.filter(function (id) { return deck.indexOf(id) < 0; }));
+    return { deck: deck.concat(rest.slice(0, CC.TEST_RUN.extra)), won: 0, test: true };
+  };
 })(window.CC);

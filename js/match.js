@@ -29,7 +29,7 @@
       costDown: 0,           // Total Football: cards cost less this turn
       powers: {},            // power id -> value, for the rest of the match
       turnPlays: { cards: 0, moves: 0, zones: 0 },
-      run: { deck: run.deck.slice(), won: run.won },
+      run: { deck: run.deck.slice(), won: run.won, test: !!run.test },
       reward: null,          // { offer: [ids], picked: id | 'skip' | null } after a win
       gk: CC.MATCH_RULES.gk,
       energy: CC.MATCH_RULES.energy,
