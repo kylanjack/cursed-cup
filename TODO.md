@@ -11,6 +11,8 @@ Not in V1. Don't build anything here until V1 ships.
 - Pitch with real markings (halfway line, centre circle, boxes) instead of three grey boxes. Keep the warm dark palette, no green.
 - Cards that look like collectible football cards: portrait frame, big cost/rating corner, rarity trim. Own design, not a copy of any existing game's card layout.
 - Stadium-board style scoreboard.
+- Card-play feedback with CSS only: card flies/fades on play, ball slides between zones, goal flash on the scoreboard, shake on goal against.
+- Sound (V2): kick, crowd, whistle, goal. Needs original or licensed audio. V1 keeps only a mute toggle stub.
 
 ## Gameplay ideas — decide after M3 playtest
 
@@ -31,3 +33,8 @@ Not in V1. Don't build anything here until V1 ships.
 - Pick your starting club = StS characters. Each club: own starter deck, own card pool slice, own unique passive. Biggest content cost on this list; do one extra club first and test it.
 - Clubs: parody/archetype clubs only. No real names, crests, kits or near-copies (trademark risk on a paid Steam release). Recognisable by style, not by name.
 - Competitions as run types / acts, all with fictional names: domestic cup, continental cups (three tiers), international tournaments. Knockout formats fit the run structure. Leagues (38 matches) don't fit a roguelike run as-is; needs its own design if wanted.
+
+## Harder opponents
+
+- Already in V1 spec: ELITE nodes (rival clubs, harder scripts, relic reward) and the FINAL boss (Mirror FC). Consider renaming ELITE to RIVAL in the UI.
+- Rival matches as a longer game: rejected for now. 12 turns is tuned; more turns dilutes tension. Make rivals harder through a rule twist per rival instead (e.g. extra intent per turn, no golden goal, hostile crowd: -1 energy turn 1).
