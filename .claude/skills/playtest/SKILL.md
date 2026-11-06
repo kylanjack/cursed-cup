@@ -30,7 +30,7 @@ The bot plays starter cards by plan and other cards greedily. Extend `botTurn` w
 node .claude/skills/playtest/browser.js <scratchpad-dir> 20
 ```
 
-Plays up to 20 turns by tapping the first playable card repeatedly, picks a reward and continues after a win, reloads at turn 4 to confirm the save survives, and screenshots phone (390px) and desktop (1280px) at start, mid, reward, end and the deck viewer. Read the PNGs with the Read tool and check layout, overflow and legibility. Any console error is a bug to fix before pushing.
+Plays up to 20 turns by tapping the first playable card repeatedly, picks a reward and continues after a win, reloads at turn 4 to confirm the save survives, and screenshots phone (390px, informational only) and desktop (1280px, the real target) at start, mid, reward, end and the deck viewer. Read the PNGs with the Read tool and check layout, overflow and legibility. Any console error is a bug to fix before pushing.
 
 ## Test runs
 

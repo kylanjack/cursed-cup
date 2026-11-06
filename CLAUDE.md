@@ -11,7 +11,7 @@ Variety comes from decisions, not noise. Every run should force different choice
 ## How Kylan works — read this first
 
 - Kylan has no local dev environment and no terminal. He edits only through the GitHub web UI and Claude Code on the web.
-- He playtests on the live GitHub Pages URL (https://kylanjack.github.io/cursed-cup/), mostly on his iPhone. Never tell him to double-click a file or run a command.
+- He playtests on the live GitHub Pages URL (https://kylanjack.github.io/cursed-cup/) in a desktop browser. Test runs with extra cards: https://kylanjack.github.io/cursed-cup/?test=1. Never tell him to double-click a file or run a command.
 - After each milestone (or each fix round he approves), commit and push **directly to `main`**. Do not open pull requests or leave work on a side branch unless he asks. Pages only deploys `main`.
 - Commit messages: short, plain, prefixed with the milestone, e.g. `M1: match screen skeleton`.
 - New ideas mid-build go in `TODO.md`, not into this spec and not into code.
@@ -20,7 +20,7 @@ Variety comes from decisions, not noise. Every run should force different choice
 
 V1 ships as a web game on GitHub Pages. The end goal is a paid Steam release, by wrapping the same code as a desktop app (Electron/NW.js/Tauri). No rewrite planned. To keep that path cheap:
 - Engine never touches the DOM. Game rules live in state/match/opponent/data files; ui.js only reads state. Keep it that way.
-- Phone is the playtest target, but nothing may depend on touch-only input or a narrow screen being the only layout. A desktop/landscape layout comes later.
+- Desktop web (landscape, mouse + keyboard) is the target, which is also the Steam target. Phone support is not required.
 - From M5 on, record run stats (wins, goals, clean sheets, career-overs) in the save so achievements and meta-progression have data later.
 - Every asset must be original or properly licensed.
 
@@ -32,7 +32,7 @@ V1 ships as a web game on GitHub Pages. The end goal is a paid Steam release, by
 - All filenames lowercase. GitHub Pages is case-sensitive.
 - Persistence via `localStorage` only, key prefix `cursedcup_`. Never use `window.storage`. The current run must survive a page refresh (auto-save after every completed action).
 - Keep every file under ~400 lines. Split by system, not by shrinking features.
-- Mobile matters: the layout must work at 390px wide (iPhone). Cards are tapped, not hovered. Tooltips = tap-to-toggle. No drag-and-drop in V1 — tap card, then tap target if needed.
+- Desktop first: design for a landscape browser window, 1280×720 minimum, mouse + keyboard. Phone layout is not required. Click a card to play it, then click a target if needed; no drag-and-drop in V1. Tooltips work on click (hover may add to that, never replace it).
 - All game data (cards, opponents, players, events) lives in plain JS object tables, never inline in engine logic. Balance changes must be data edits.
 
 ## Design system
