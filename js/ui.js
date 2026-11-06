@@ -12,6 +12,21 @@
     });
   }
 
+  // Live numbers on shot and steal cards, so the outcome is known before you commit.
+  function cardCalc(s, c) {
+    if (c.type === 'shot') {
+      var p = CC.shotPower(s, c), w = CC.shotWall(s);
+      return '<span class="card-calc' + (p > w ? ' good' : '') + '">' + c.params.power + '+' + s.atk +
+        '=' + p + ' vs ' + w + (p > w ? ' GOAL' : ' SAVED') + '</span>';
+    }
+    if (c.effect === 'steal') {
+      var ctrl = CC.oppDef(s).control, win = c.params.steal > ctrl;
+      return '<span class="card-calc' + (win ? ' good' : '') + '">' + c.params.steal + ' vs CTRL ' + ctrl +
+        (win ? ' WIN' : ' FAIL') + '</span>';
+    }
+    return '';
+  }
+
   CC.renderCard = function (s, inst) {
     var c = CC.card(inst);
     var block = CC.cardBlock(s, inst);
@@ -21,6 +36,7 @@
       '<span class="card-name">' + esc(c.name) + '</span>' +
       '<span class="card-type">' + c.type.toUpperCase() + '</span>' +
       '<span class="card-text">' + esc(c.text) + '</span>' +
+      cardCalc(s, c) +
       '</button>';
   };
 
@@ -45,33 +61,46 @@
   function renderOverlay(s) {
     var ov = $('overlay');
     if (!s.over) { ov.hidden = true; ov.innerHTML = ''; return; }
-    var y = s.score.you, t = s.score.them;
-    var verdict = y > t ? 'You win.' : (y < t ? 'You lose.' : 'Draw. Golden goal comes in Milestone 2.');
-    ov.innerHTML = '<div class="overlay-box">' +
-      '<h2>FULL TIME</h2>' +
-      '<p class="overlay-score">' + y + ' - ' + t + '</p>' +
-      '<p>' + verdict + '</p>' +
+    var win = s.result === 'win';
+    var last = s.log[s.log.length - 1];
+    ov.innerHTML = '<div class="overlay-box' + (win ? '' : ' lose') + '">' +
+      '<h2>' + (win ? 'YOU WIN' : 'YOU LOSE') + '</h2>' +
+      '<p class="overlay-score">' + s.score.you + ' - ' + s.score.them + '</p>' +
+      '<p>' + esc(last ? last.text : '') + '</p>' +
       '<button class="btn btn-main" type="button" data-act="new">New match</button>' +
+      '<button class="btn btn-ghost" type="button" data-act="close">See the log</button>' +
       '</div>';
-    ov.hidden = false;
+    ov.hidden = !!CC.ui.overlayClosed;
   }
 
   CC.render = function (s) {
     $('score-you').textContent = s.score.you;
     $('score-them').textContent = s.score.them;
-    $('opp-short').textContent = s.opponent.short;
-    $('clock-min').textContent = CC.clockMinute(s) + "'";
-    $('clock-turn').textContent = s.over ? 'FT' : 'T' + s.turn + '/' + CC.MATCH_RULES.turns;
+    $('opp-short').textContent = s.opp.short;
+    $('clock-min').textContent = CC.clockLabel(s) + "'";
+    $('clock-turn').textContent = s.over ? 'FT' : (s.golden ? 'GOLDEN GOAL' : 'T' + s.turn + '/' + CC.MATCH_RULES.turns);
 
-    $('intent').innerHTML = '<span class="intent-label">' + esc(s.opponent.name.toUpperCase()) +
-      '</span><span class="intent-val">No intent yet</span>';
+    var ip = CC.intentPreview(s);
+    var box = $('intent');
+    box.className = 'intent' + (ip.lost ? ' lost' : '') + (ip.danger ? ' danger' : '');
+    box.innerHTML = '<div class="intent-top"><span class="intent-label">' + esc(s.opp.name.toUpperCase()) +
+      '</span><span class="intent-head">' + (s.over ? '-' : esc(ip.head)) + '</span></div>' +
+      '<div class="intent-val">' + (s.over ? 'Match over.' : esc(ip.detail)) + '</div>';
 
     $('pitch').innerHTML = renderPitch(s);
 
+    var od = CC.oppDef(s);
     $('stats').innerHTML =
+      '<span class="stats-side">YOU</span>' +
       stat('ATK', s.atk, 'accent') +
       stat('SHP', s.shp) +
-      stat('CONTROL', s.control);
+      stat('CTRL', s.control) +
+      stat('GK', s.gk) +
+      '<span class="stats-side">' + esc(s.opp.short) + '</span>' +
+      stat('ATK', s.opp.atk, 'danger') +
+      stat('DEF', (od.def + s.opp.bus) + (s.opp.bus ? '<small>+' + s.opp.bus + '</small>' : '')) +
+      stat('CTRL', od.control) +
+      stat('GK', od.gk);
 
     var pips = '';
     for (var i = 0; i < CC.MATCH_RULES.energy; i++) {
@@ -91,8 +120,8 @@
     if (CC.ui.msgText) { msg.textContent = CC.ui.msgText; msg.hidden = false; }
     else { msg.hidden = true; }
 
-    $('log').innerHTML = s.log.slice(-8).reverse().map(function (e) {
-      return '<div class="log-line"><span class="log-min">' + e.min + "'</span>" + esc(e.text) + '</div>';
+    $('log').innerHTML = s.log.slice(-12).reverse().map(function (e) {
+      return '<div class="log-line' + (e.kind ? ' ' + e.kind : '') + '"><span class="log-min">' + e.min + "'</span>" + esc(e.text) + '</div>';
     }).join('');
 
     $('btn-end').disabled = s.over;

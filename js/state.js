@@ -5,7 +5,7 @@ window.CC = window.CC || {};
   'use strict';
 
   CC.SAVE_KEY = 'cursedcup_match';
-  CC.SAVE_VERSION = 1;
+  CC.SAVE_VERSION = 2;
 
   // New seed for a new run/match. The only use of Math.random in the game.
   CC.newSeed = function () {

@@ -12,6 +12,7 @@
 
   function startNew() {
     CC.clearReason();
+    CC.ui.overlayClosed = false;
     s = CC.newMatch(CC.newSeed());
     commit();
   }
@@ -64,6 +65,7 @@
     document.getElementById('btn-new').addEventListener('click', onNewTap);
     document.getElementById('overlay').addEventListener('click', function (e) {
       if (e.target.closest('[data-act="new"]')) startNew();
+      else if (e.target.closest('[data-act="close"]')) { CC.ui.overlayClosed = true; CC.render(s); }
     });
     commit();
   }
