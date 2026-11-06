@@ -13,6 +13,7 @@
   function startNew() {
     CC.clearReason();
     CC.ui.overlayClosed = false;
+    CC.ui.view = null;
     s = CC.newMatch(CC.newSeed());
     commit();
   }
@@ -35,7 +36,24 @@
     commit();
   }
 
+  // Overlay + viewer + pile buttons share one handler. stopPropagation keeps nested taps from leaking.
+  function onUiTap(e) {
+    var el = e.target.closest('[data-pick],[data-act],[data-view]');
+    if (!el) return;
+    e.stopPropagation();
+    var pick = el.getAttribute('data-pick');
+    var act = el.getAttribute('data-act');
+    var view = el.getAttribute('data-view');
+    if (pick) { CC.pickReward(s, pick); commit(); return; }
+    if (view) { CC.ui.view = view; CC.render(s); return; }
+    if (act === 'new') startNew();
+    else if (act === 'next') { CC.ui.overlayClosed = false; s = CC.nextMatch(s); commit(); }
+    else if (act === 'close') { CC.ui.overlayClosed = true; CC.render(s); }
+    else if (act === 'close-view') { CC.ui.view = null; CC.render(s); }
+  }
+
   function onEndTurn() {
+    if (s.over) { CC.ui.overlayClosed = false; CC.render(s); return; }
     CC.clearReason();
     CC.endTurn(s);
     commit();
@@ -46,14 +64,14 @@
     var btn = e.currentTarget;
     if (s.over || Date.now() < confirmNewUntil) {
       confirmNewUntil = 0;
-      btn.textContent = 'New match';
+      btn.textContent = 'New run';
       startNew();
       return;
     }
     confirmNewUntil = Date.now() + 3000;
     btn.textContent = 'Tap again';
     setTimeout(function () {
-      if (Date.now() >= confirmNewUntil) btn.textContent = 'New match';
+      if (Date.now() >= confirmNewUntil) btn.textContent = 'New run';
     }, 3100);
   }
 
@@ -63,9 +81,8 @@
     document.getElementById('hand').addEventListener('click', onHandTap);
     document.getElementById('btn-end').addEventListener('click', onEndTurn);
     document.getElementById('btn-new').addEventListener('click', onNewTap);
-    document.getElementById('overlay').addEventListener('click', function (e) {
-      if (e.target.closest('[data-act="new"]')) startNew();
-      else if (e.target.closest('[data-act="close"]')) { CC.ui.overlayClosed = true; CC.render(s); }
+    ['overlay', 'viewer', 'piles'].forEach(function (id) {
+      document.getElementById(id).addEventListener('click', onUiTap);
     });
     commit();
   }

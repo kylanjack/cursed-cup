@@ -1,5 +1,5 @@
-// match.js — match engine: turns, energy, hand, zones, card effects, shots, full time.
-// Opponent intents live in opponent.js.
+// match.js — match engine: turns, energy, hand, zones, shots, full time, rewards.
+// Card effects live in effects.js. Opponent intents live in opponent.js.
 (function (CC) {
   'use strict';
 
@@ -7,8 +7,10 @@
   // gk: your keeper's flat save value. Moves to the Brick Walls relic in Milestone 5.
   CC.MATCH_RULES = { turns: 12, handSize: 5, energy: 3, minutes: 90, gk: 4 };
 
-  CC.newMatch = function (seed, oppId) {
+  // run: { deck: [card ids], won: matches won so far }. Omit for a fresh starter run.
+  CC.newMatch = function (seed, oppId, run) {
     var od = CC.OPPONENTS[oppId || 'rustborough'];
+    run = run || { deck: CC.STARTER_DECK.slice(), won: 0 };
     var s = {
       version: CC.SAVE_VERSION,
       seed: seed,
@@ -23,6 +25,12 @@
       shp: 0,
       control: 0,
       shpGained: 0,          // SHAPE gained this turn (cancels DIRTY TACKLE injuries)
+      shotBonus: 0,          // Driven Cross: next shot this turn
+      costDown: 0,           // Total Football: cards cost less this turn
+      powers: {},            // power id -> value, for the rest of the match
+      turnPlays: { cards: 0, moves: 0, zones: 0 },
+      run: { deck: run.deck.slice(), won: run.won },
+      reward: null,          // { offer: [ids], picked: id | 'skip' | null } after a win
       gk: CC.MATCH_RULES.gk,
       energy: CC.MATCH_RULES.energy,
       draw: [],
@@ -33,13 +41,13 @@
       nextUid: 1,
       opp: {
         id: od.id, name: od.name, short: od.short,
-        atk: 0, bus: 0, busUntil: 0,
+        atk: 0, perm: 0, bus: 0, busUntil: 0,
         intent: null, idx: {}
       }
     };
-    var deck = CC.STARTER_DECK.map(function (id) { return { uid: s.nextUid++, id: id }; });
+    var deck = s.run.deck.map(function (id) { return { uid: s.nextUid++, id: id }; });
     s.draw = CC.shuffle(s, deck);
-    CC.log(s, 'Kick off vs ' + od.name + '. Seed ' + seed + '.');
+    CC.log(s, 'Match ' + (run.won + 1) + '. Kick off vs ' + od.name + '. Seed ' + seed + '.');
     CC.pickIntent(s);
     CC.drawCards(s, CC.MATCH_RULES.handSize);
     return s;
@@ -67,7 +75,14 @@
     var od = CC.oppDef(s);
     return od.def + s.opp.bus + od.gk;
   };
-  CC.shotPower = function (s, c) { return c.params.power + s.atk; };
+
+  // Current cost after Simple Finish's rule and Total Football.
+  CC.cardCost = function (s, inst) {
+    var c = CC.card(inst);
+    var cost = c.cost;
+    if (c.freeIfAtk && s.atk >= c.freeIfAtk) cost = 0;
+    return Math.max(0, cost - s.costDown);
+  };
 
   CC.drawCards = function (s, n) {
     for (var i = 0; i < n; i++) {
@@ -85,7 +100,8 @@
   CC.cardBlock = function (s, inst) {
     var c = CC.card(inst);
     if (s.over) return 'Match over. Start a new match.';
-    if (c.cost > s.energy) return 'Not enough energy. Costs ' + c.cost + ', you have ' + s.energy + '.';
+    var cost = CC.cardCost(s, inst);
+    if (cost > s.energy) return 'Not enough energy. Costs ' + cost + ', you have ' + s.energy + '.';
     if (c.needsPossession === true && s.ball.side !== 'you') return 'Needs the ball.';
     if (c.needsPossession === false && s.ball.side === 'you') return 'Only playable when they have the ball.';
     if (typeof c.zone === 'number' && s.ball.zone !== c.zone) return 'Only playable in the ' + CC.ZONES[c.zone] + '.';
@@ -99,10 +115,12 @@
     var inst = s.hand[idx];
     if (CC.cardBlock(s, inst)) return false;
     var c = CC.card(inst);
-    s.energy -= c.cost;
+    s.energy -= CC.cardCost(s, inst);
     s.hand.splice(idx, 1);
-    (c.exhaust ? s.exhaust : s.discard).push(inst);
+    (c.exhaust || c.type === 'power' ? s.exhaust : s.discard).push(inst);
     var res = CC.EFFECTS[c.effect](s, c.params || {}, c);
+    s.turnPlays.cards++;
+    if (c.type === 'move') s.turnPlays.moves++;
     CC.log(s, c.name + ': ' + res.text, res.kind);
     return true;
   };
@@ -127,53 +145,11 @@
   CC.finish = function (s, result, why) {
     s.over = true;
     s.result = result;
-    CC.log(s, why + ' ' + s.score.you + '-' + s.score.them + '.', result === 'win' ? 'goal' : 'bad');
-  };
-
-  // Effect handlers. Each reads numbers from card params and returns { text, kind }.
-  CC.EFFECTS = {
-    move: function (s, p) {
-      var parts = [];
-      if (p.atkLoss) {
-        var lost = Math.floor(s.atk * p.atkLoss);
-        s.atk -= lost;
-        if (lost) parts.push('-' + lost + ' ATK');
-      }
-      var from = s.ball.zone;
-      s.ball.zone = Math.min(2, from + (p.zones || 0));
-      parts.push(s.ball.zone > from ? 'ball to ' + CC.ZONES[s.ball.zone] : 'ball stays in ' + CC.ZONES[from]);
-      if (p.atk) { s.atk += p.atk; parts.push('+' + p.atk + ' ATK'); }
-      return { text: parts.join(', ') + '.' };
-    },
-    gainShape: function (s, p) {
-      s.shp += p.shp;
-      s.shpGained += p.shp;
-      return { text: '+' + p.shp + ' SHP.' };
-    },
-    gainControl: function (s, p) {
-      s.control += p.control;
-      return { text: '+' + p.control + ' CONTROL.' };
-    },
-    steal: function (s, p) {
-      var ctrl = CC.oppDef(s).control;
-      if (p.steal > ctrl) {
-        CC.setBall(s, 'you', s.ball.zone);
-        return { text: 'STEAL ' + p.steal + ' beats CONTROL ' + ctrl + '. Ball won in ' + CC.ZONES[s.ball.zone] + '.' };
-      }
-      return { text: 'STEAL ' + p.steal + ' does not beat CONTROL ' + ctrl + '. No change.', kind: 'bad' };
-    },
-    shoot: function (s, p, c) {
-      var power = CC.shotPower(s, c);
-      var wall = CC.shotWall(s);
-      if (power > wall) {
-        s.score.you++;
-        CC.restart(s, 'them');
-        if (s.golden) CC.finish(s, 'win', 'Golden goal. You win');
-        return { text: power + ' vs ' + wall + '. GOAL.', kind: 'goal' };
-      }
-      CC.restart(s, 'them');
-      return { text: power + ' vs ' + wall + '. Saved. Their ball in MIDFIELD.', kind: 'bad' };
+    if (result === 'win') {
+      s.run.won++;
+      s.reward = { offer: CC.rollReward(s), picked: null };
     }
+    CC.log(s, why + ' ' + s.score.you + '-' + s.score.them + '.', result === 'win' ? 'goal' : 'bad');
   };
 
   CC.endTurn = function (s) {
@@ -201,12 +177,20 @@
 
   CC.startTurn = function (s) {
     var keep = Math.floor(s.shp / 2);
+    if (s.powers.the_wall) keep = Math.max(keep, Math.min(s.shp, s.powers.the_wall));
     var decayed = s.shp - keep;
     s.shp = keep;
     s.control = 0;
     s.shpGained = 0;
+    s.shotBonus = 0;
+    s.costDown = 0;
+    s.turnPlays = { cards: 0, moves: 0, zones: 0 };
     s.energy = CC.MATCH_RULES.energy;
     if (decayed) CC.log(s, 'SHP decays by ' + decayed + '.');
+    if (s.powers.prime_form && s.ball.side === 'you') {
+      s.atk += s.powers.prime_form;
+      CC.log(s, 'Prime Form: +' + s.powers.prime_form + ' ATK.');
+    }
     CC.drawCards(s, CC.MATCH_RULES.handSize);
   };
 })(window.CC);

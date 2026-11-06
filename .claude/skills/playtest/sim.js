@@ -1,11 +1,12 @@
 // Headless balance sim: loads the game's engine files in Node, plays N matches with a greedy bot.
 // Usage: node .claude/skills/playtest/sim.js [matches=2000] [seedToPrintLog]
-// The bot only knows starter cards. Update botTurn when the card pool changes.
+//        node .claude/skills/playtest/sim.js run [runs=500]   — chained matches, bot picks a random reward each win
+// The bot plays starter cards by plan and any other card greedily. Extend botTurn when cards need smarter use.
 const fs = require('fs'), path = require('path');
 const root = path.resolve(__dirname, '../../..');
 global.window = global;
 global.localStorage = { getItem() { return null; }, setItem() {}, removeItem() {} };
-for (const f of ['state', 'data_cards', 'data_opponents', 'match', 'opponent']) {
+for (const f of ['state', 'data_cards', 'data_opponents', 'match', 'effects', 'opponent', 'reward']) {
   eval(fs.readFileSync(path.join(root, 'js', f + '.js'), 'utf8'));
 }
 const CC = global.CC;
@@ -15,6 +16,8 @@ const play = (s, h) => CC.playCard(s, h.uid);
 function botTurn(s) {
   for (let guard = 0; guard < 10 && !s.over; guard++) {
     const it = s.opp.intent;
+    const anyShot = s.hand.find(h => CC.card(h).type === 'shot' && !CC.cardBlock(s, h) && CC.shotPower(s, CC.card(h)) > CC.shotWall(s));
+    if (anyShot) { play(s, anyShot); continue; }
     const pressed = (it.type === 'press' || it.type === 'dirty') && it.n > s.control && CC.intentValid(s);
     if (s.ball.side === 'you') {
       const shot = s.hand.find(h => CC.card(h).type === 'shot');
@@ -29,17 +32,36 @@ function botTurn(s) {
       if (s.ball.zone === 2 && !shot) { const sp = find(s, c => c.id === 'short_pass'); if (sp && s.energy > 1) { play(s, sp); continue; } }
       const j = find(s, c => c.id === 'jockey'); if (j) { play(s, j); continue; }
       const sp2 = find(s, c => c.id === 'short_pass'); if (sp2) { play(s, sp2); continue; }
+      const other = find(s, c => c.rarity !== 'starter' && c.type !== 'shot' && c.id !== 'clearance' && c.id !== 'cynical_foul'); if (other) { play(s, other); continue; }
       break;
     } else {
       const t = find(s, c => c.effect === 'steal' && c.params.steal > CC.oppDef(s).control); if (t) { play(s, t); continue; }
       const j = find(s, c => c.id === 'jockey'); if (j) { play(s, j); continue; }
+      const other = find(s, c => c.rarity !== 'starter' && c.type !== 'shot' && c.id !== 'cynical_foul'); if (other) { play(s, other); continue; }
       break;
     }
   }
   CC.endTurn(s);
 }
 
-function runMatch(seed) { const s = CC.newMatch(seed); let g = 0; while (!s.over && g++ < 40) botTurn(s); return s; }
+function playOut(s) { let g = 0; while (!s.over && g++ < 40) botTurn(s); return s; }
+function runMatch(seed) { return playOut(CC.newMatch(seed)); }
+
+if (process.argv[2] === 'run') {
+  const R = +process.argv[3] || 500, cap = 15, dist = {};
+  let total = 0;
+  for (let i = 1; i <= R; i++) {
+    let s = playOut(CC.newMatch(i * 104729));
+    while (s.result === 'win' && s.run.won < cap) {
+      const o = s.reward.offer; CC.pickReward(s, o[Math.floor(CC.rand(s) * o.length)]);
+      s = playOut(CC.nextMatch(s));
+    }
+    total += s.run.won; dist[s.run.won] = (dist[s.run.won] || 0) + 1;
+  }
+  console.log('avg matches won per run ' + (total / R).toFixed(2) + ' (cap ' + cap + ')');
+  console.log('wins before loss: ' + Object.entries(dist).map(e => e[0] + ':' + e[1]).join('  '));
+  process.exit(0);
+}
 
 const N = +process.argv[2] || 2000;
 const res = { win: 0, lose: 0 }, scores = {}, ev = {};

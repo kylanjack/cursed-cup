@@ -53,10 +53,13 @@ js/data_cards.js  — card definition table
 js/data_opponents.js — opponent definition table (intents, stats)
 js/data_squad.js  — player (relic) definition table, traits, recruits
 js/data_events.js — dressing-room event table
-js/match.js       — match engine: turns, energy, zones, intents, resolution
+js/match.js       — match engine: turns, energy, zones, shots, full time
+js/effects.js     — card effect handlers (dispatched by effect name)
+js/opponent.js    — opponent intents: pick, validate, execute, preview
 js/map.js         — run map generation and rendering
 js/reward.js      — post-match card rewards, market, training logic
-js/ui.js          — DOM builders: card render, tooltips, log, scoreboard, overlays
+js/ui.js          — DOM builders: card render, tooltips, log, scoreboard
+js/screens.js     — overlays: results/reward, pile and deck viewer
 ```
 
 ## Match engine (this is the game — build and tune this before any content)

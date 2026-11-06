@@ -20,7 +20,16 @@ const turns = +process.argv[3] || 20;
     await p.waitForTimeout(300);
     await p.screenshot({ path: path.join(out, name + '-start.png'), fullPage: true });
     for (let t = 0; t < turns; t++) {
-      if (await p.$('#overlay:not([hidden])')) break;
+      if (await p.$('#overlay:not([hidden])')) {
+        const pick = await p.$('[data-pick]:not([data-pick="skip"])');
+        if (pick) {
+          await p.screenshot({ path: path.join(out, name + '-reward.png'), fullPage: true });
+          await pick.click();
+          await p.click('[data-act="next"]');
+          continue;
+        }
+        break;
+      }
       for (let k = 0; k < 6; k++) { const c = await p.$('.card:not(.blocked)'); if (!c) break; await c.click(); }
       if (t === 3) {
         const before = await p.textContent('#log');
@@ -31,6 +40,8 @@ const turns = +process.argv[3] || 20;
       await p.click('#btn-end');
     }
     await p.screenshot({ path: path.join(out, name + '-end.png'), fullPage: true });
+    await p.click('.pile[data-view="deck"]').catch(() => {});
+    await p.screenshot({ path: path.join(out, name + '-deck.png'), fullPage: true });
     await p.close();
   }
   await b.close();

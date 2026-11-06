@@ -19,7 +19,10 @@ Add a seed as a second argument to print that match's full log: `node .claude/sk
 The bot is greedy and dumb; a human should beat its win rate. Reference after M2 tuning vs Rustborough: win ~59%, golden ~32%, avg goals ~2.3, 0-0 under 5%.
 Red flags: win rate above 80% or below 35%, 0-0 above 10%, opponent averaging under 0.5 goals.
 
-The bot only knows starter cards. When the card pool grows, extend `botTurn` in sim.js.
+Run mode chains matches like a run (random reward pick each win, capped at 15):
+`node .claude/skills/playtest/sim.js run 500`
+
+The bot plays starter cards by plan and other cards greedily. Extend `botTurn` when new cards need smarter use.
 
 ## 2. Browser playthrough
 
@@ -27,7 +30,7 @@ The bot only knows starter cards. When the card pool grows, extend `botTurn` in 
 node .claude/skills/playtest/browser.js <scratchpad-dir> 20
 ```
 
-Plays up to 20 turns by tapping the first playable card repeatedly, reloads at turn 4 to confirm the save survives, and screenshots phone (390px) and desktop (1280px) at start, mid and end. Read the PNGs with the Read tool and check layout, overflow and legibility. Any console error is a bug to fix before pushing.
+Plays up to 20 turns by tapping the first playable card repeatedly, picks a reward and continues after a win, reloads at turn 4 to confirm the save survives, and screenshots phone (390px) and desktop (1280px) at start, mid, reward, end and the deck viewer. Read the PNGs with the Read tool and check layout, overflow and legibility. Any console error is a bug to fix before pushing.
 
 ## 3. Report
 

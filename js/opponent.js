@@ -63,7 +63,7 @@
   };
 
   // Their shot total and what it has to beat.
-  CC.theirShot = function (s) { return s.opp.intent.n + s.opp.atk; };
+  CC.theirShot = function (s) { return s.opp.intent.n + s.opp.atk + s.opp.perm; };
   CC.yourWall = function (s) { return s.shp + s.gk; };
 
   // Executes the intent at end of your turn. Returns extra clock turns burned.
@@ -73,6 +73,10 @@
     if (s.opp.bus && s.turn >= s.opp.busUntil) {
       s.opp.bus = 0;
       CC.log(s, 'Their bus leaves. DEF back to normal.');
+    }
+    if (it.cancelled) {
+      CC.log(s, 'Their ' + CC.INTENT_NAMES[it.type] + ' was cancelled by a foul.');
+      return 0;
     }
     if (!CC.intentValid(s)) {
       CC.log(s, 'INTENT LOST: ' + CC.INTENT_NAMES[it.type] + ' no longer possible.');
@@ -138,13 +142,14 @@
     var it = s.opp.intent;
     if (!it) return { head: '-', detail: '' };
     var head = CC.INTENT_NAMES[it.type] + (it.n ? ' ' + it.n : '');
+    if (it.cancelled) return { head: head, detail: 'CANCELLED by your foul. They do nothing this turn.', lost: true };
     if (!CC.intentValid(s)) return { head: head, detail: 'INTENT LOST. They do nothing this turn.', lost: true };
     switch (it.type) {
       case 'build':
         return { head: head, detail: 'Ball to ' + CC.ZONES[Math.max(0, s.ball.zone - 1)] + '. Banked ATK ' + s.opp.atk + ' → ' + (s.opp.atk + it.n) + '.' };
       case 'shoot':
         var p = CC.theirShot(s), w = CC.yourWall(s);
-        return { head: head, detail: it.n + '+' + s.opp.atk + ' = ' + p + ' vs SHP ' + s.shp + ' + GK ' + s.gk + ' = ' + w + '. ' +
+        return { head: head, detail: it.n + '+' + (s.opp.atk + s.opp.perm) + ' = ' + p + ' vs SHP ' + s.shp + ' + GK ' + s.gk + ' = ' + w + '. ' +
           (p > w ? 'GOAL unless you add ' + (p - w) + ' SHP.' : 'Saved.'), danger: p > w };
       case 'waste':
         return { head: head, detail: 'Clock runs an extra turn.', danger: true };

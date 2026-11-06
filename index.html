@@ -32,6 +32,8 @@
 
     <section class="stats" id="stats"></section>
 
+    <section class="status" id="status" hidden></section>
+
     <p class="rule">Level at 90': one extra turn each. First goal wins. Still level: you lose.</p>
 
     <section class="hand-bar">
@@ -44,13 +46,14 @@
     <section class="hand" id="hand"></section>
 
     <div class="actions">
-      <button class="btn btn-ghost" id="btn-new" type="button">New match</button>
+      <button class="btn btn-ghost" id="btn-new" type="button">New run</button>
       <button class="btn btn-main" id="btn-end" type="button">End turn</button>
     </div>
 
     <section class="log" id="log"></section>
 
     <div class="overlay" id="overlay" hidden></div>
+    <div class="overlay viewer" id="viewer" hidden></div>
 
     <div class="seed" id="seed"></div>
   </main>
@@ -59,8 +62,11 @@
   <script src="js/data_cards.js"></script>
   <script src="js/data_opponents.js"></script>
   <script src="js/match.js"></script>
+  <script src="js/effects.js"></script>
   <script src="js/opponent.js"></script>
+  <script src="js/reward.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/screens.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
