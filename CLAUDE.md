@@ -4,6 +4,10 @@ Turn-based soccer deckbuilder inspired by Slay the Spire 1 and 2: StS run struct
 
 All characters, clubs and players are fictional. Never use real footballers, clubs or competitions by name.
 
+## Design pillar: no two runs feel the same
+
+Variety comes from decisions, not noise. Every run should force different choices through what is offered: card rewards, recruits, map layout, events, rivals, curses. Randomness stays in offers and draws, never in resolving shots or tackles. When adding content, ask: does this create a new decision, or just a new number?
+
 ## How Kylan works — read this first
 
 - Kylan has no local dev environment and no terminal. He edits only through the GitHub web UI and Claude Code on the web.

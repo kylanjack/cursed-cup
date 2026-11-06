@@ -1,5 +1,8 @@
 # TODO — ideas parked for later
 
+Kylan wants every item on this list eventually. Order: finish V1 (M3–M6) small and polished first, then pull from here.
+Pillar: no two runs feel the same. Biggest variety drivers below, in rough priority: starting club pick, pre-season choice, curse cards, rival rule twists, ? nodes, kit bag, half-time talks.
+
 Not in V1. Don't build anything here until V1 ships.
 
 - PWA manifest + icon so the home-screen version opens full screen
