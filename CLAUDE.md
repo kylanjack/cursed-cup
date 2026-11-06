@@ -125,9 +125,9 @@ Recruits (new relics) come from the market and rare match rewards; define 10+ in
 
 ## Run structure (V1: one act)
 
-StS-style node map, 8 rows, 2–3 choices wide, all paths end at the final. Node types: MATCH (fight) · ELITE (rival club, harder pattern, relic reward) · MARKET (buy cards, remove a card for coins, physio heals one injury, one recruit on offer) · TRAINING (upgrade 1 card: upgraded = +cost efficiency or +numbers, shown with a + suffix) · EVENT (dressing-room text event from data_events.js, 2 choices, consequences can include injuries) · FINAL (boss).
+StS-style node map, 8 rows, 2–3 choices wide, all paths end at the final. Node types: MATCH (fight) · RIVAL (harder club with its own rule twist and pattern, relic reward) · MARKET (buy cards, remove a card for coins, physio heals one injury, one recruit on offer) · TRAINING (upgrade 1 card: upgraded = +cost efficiency or +numbers, shown with a + suffix) · EVENT (dressing-room text event from data_events.js, 2 choices, consequences can include injuries) · FINAL (boss).
 
-V1 opponents (define as data): Rustborough Athletic (teaches BUILD UP/SHOOT) · The Hollow XI (press-heavy) · Referee's Favourites (elite; DIRTY TACKLE pattern, fouls your key players) · Mirror FC (final boss: its DEF/GK/ATK scale off YOUR deck size and relic count — hoarding is punished).
+V1 opponents (define as data): Rustborough Athletic (teaches BUILD UP/SHOOT) · The Hollow XI (press-heavy) · Referee's Favourites (rival; DIRTY TACKLE pattern, fouls your key players) · Mirror FC (final boss: its DEF/GK/ATK scale off YOUR deck size and relic count — hoarding is punished).
 
 ## Out of scope for V1 — refuse scope creep, suggest a TODO note instead
 
@@ -140,7 +140,7 @@ Multiple acts · ascension levels · daily seeds · deck archetypes beyond the b
 3. Card pool (all 24) + post-match reward screen (pick 1 of 3) + deck viewer.
 4. Run map + 3 regular opponents + coins + run save/load (refresh-proof).
 5. Squad relics + injuries/permadeath + market (buy/remove/physio/recruit) + training node.
-6. Events + elite + Mirror FC final + title/victory/run-over screens with run summary + first balance pass.
+6. Events + rival + Mirror FC final + title/victory/run-over screens with run summary + first balance pass.
 
 After each milestone: commit and push to `main`, then stop and tell Kylan to refresh https://kylanjack.github.io/cursed-cup/ (wait for the Actions green check) and playtest. Do not continue without playtest feedback. Milestone 2 cannot be approved by "it works" — only by "I wanted to play it again."
 

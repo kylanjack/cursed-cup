@@ -36,5 +36,33 @@ Not in V1. Don't build anything here until V1 ships.
 
 ## Harder opponents
 
-- Already in V1 spec: ELITE nodes (rival clubs, harder scripts, relic reward) and the FINAL boss (Mirror FC). Consider renaming ELITE to RIVAL in the UI.
-- Rival matches as a longer game: rejected for now. 12 turns is tuned; more turns dilutes tension. Make rivals harder through a rule twist per rival instead (e.g. extra intent per turn, no golden goal, hostile crowd: -1 energy turn 1).
+- Rivals (V1 spec, M6): each rival gets a rule twist, not a longer match. Ideas: they act twice per turn, no golden goal (draw = loss), hostile crowd (-1 energy turn 1).
+
+## StS-style ideas — after V1
+
+- Curse cards (StS Wounds/curses, fits the theme): junk cards added to your deck by events or rivals, e.g. "Cramp" (unplayable), "Booed" (costs 1, does nothing). Removed at the market.
+- Kit bag consumables (StS potions): hold 2, use any time, one shot. E.g. "Energy Gel" +2 energy, "Smelling Salts" +8 SHP.
+- Pre-season blessing (StS Neow): one choice at run start, e.g. remove a card / random rare / +coins with a curse.
+- Unknown "?" map nodes: event, match, market or treasure.
+- Card library and run history screens.
+- Keywords: Retain (stays in hand), Ethereal (exhausts if not played).
+
+## Football ideas — after V1
+
+- Half-time at turn 6: pick one team talk (heal SHP, +1 energy next turn, upgrade a card for this match).
+- Yellow and red cards: cynical/foul cards give yellows; second yellow sends a squad player off for the match (relic disabled). Pairs with the injury system.
+- Squad chemistry: bonus when relics of linked positions are both fit (GK + CB, MID + ST).
+- One substitution per match: swap an injured player's relic for a bench player.
+- Man of the match after a win: small upgrade to one relic.
+
+## App basics — slot in where noted
+
+- Keyword glossary: tap ATK / SHP / CTRL / GK / intent names for a one-line rule. (Visual pass. Kylan needed a match to learn the rules.)
+- First-match tutorial prompts, skippable. (M6, with the title screen.)
+- Version number in the corner for bug reports. (Any time, tiny.)
+- Settings: mute, reduced motion, text size. (M6.)
+- Colour-blind check: accent #ff6b2b and danger #e05a3a are close. Always pair with text (GOAL / SAVED), never colour alone. (Visual pass.)
+- Corrupted-save recovery: if load fails, offer a fresh start instead of a blank screen. (M4, with run save.)
+- Save migration instead of wiping old saves. (Before any public release.)
+- Desktop: keyboard shortcuts (1–5 play card, Space end turn). (Steam phase.)
+- UI strings in one table so translation is possible later. (Steam phase.)
