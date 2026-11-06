@@ -75,7 +75,7 @@
   ];
 
   // Post-match reward: 3 different cards, rarity rolled per slot.
-  CC.REWARD = { choices: 3, odds: { common: 0.6, uncommon: 0.35, rare: 0.05 } };
+  CC.REWARD = { choices: 3, odds: { common: 0.55, uncommon: 0.35, rare: 0.1 } };
 
   // Status chips shown under the stats. Text is the one-line rule.
   CC.STATUS = {

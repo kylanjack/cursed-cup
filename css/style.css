@@ -207,8 +207,16 @@ button {
 .card-calc { margin-top: auto; font-family: var(--f-mono); font-size: 10.5px; font-weight: 700; color: var(--danger); }
 .card-calc.good { color: var(--accent); }
 .card-cost.cheaper { background: var(--text); }
-.card.rarity-uncommon { border-color: #5a4f42; }
-.card.rarity-rare { border-color: var(--accent); }
+/* Rarity: side/bottom border + tag. Type keeps the thick top bar. */
+.card-type { display: flex; align-items: center; gap: 6px; }
+.card-rarity { font-size: 8.5px; font-weight: 700; padding: 1px 4px; border: 1px solid var(--border); color: var(--dim); }
+.card.rarity-starter .card-rarity { display: none; }
+.card.rarity-common { border-left-color: var(--dim); border-right-color: var(--dim); border-bottom-color: var(--dim); }
+.card.rarity-uncommon { border-left-color: var(--text); border-right-color: var(--text); border-bottom-color: var(--text); background: #262119; }
+.card.rarity-uncommon .card-rarity { background: var(--text); border-color: var(--text); color: var(--bg); }
+.card.rarity-rare { border-left-color: var(--accent); border-right-color: var(--accent); border-bottom-color: var(--accent);
+  background: #2c2018; box-shadow: 0 0 0 1px var(--accent), 0 0 14px rgba(255, 107, 43, 0.35); }
+.card.rarity-rare .card-rarity { background: var(--accent); border-color: var(--accent); color: var(--bg); }
 .card.blocked { opacity: 0.4; border-style: dashed; }
 .card.blocked .card-cost { background: var(--dim); }
 .empty { grid-column: 1 / -1; color: var(--dim); font-size: 13px; margin: 0; padding: 20px 0; text-align: center; }

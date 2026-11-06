@@ -38,7 +38,8 @@
       (live ? ' data-uid="' + inst.uid + '"' : '') + (attr || '') + ' aria-disabled="' + (block ? 'true' : 'false') + '">' +
       '<span class="card-cost' + (cost < c.cost ? ' cheaper' : '') + '">' + cost + '</span>' +
       '<span class="card-name">' + esc(c.name) + '</span>' +
-      '<span class="card-type">' + c.type.toUpperCase() + (c.rarity !== 'starter' ? ' · ' + c.rarity.toUpperCase() : '') + '</span>' +
+      '<span class="card-type">' + c.type.toUpperCase() +
+        '<span class="card-rarity">' + c.rarity.toUpperCase() + '</span></span>' +
       '<span class="card-text">' + esc(c.text) + '</span>' +
       (live ? cardCalc(s, c) : '') +
       '</button>';
