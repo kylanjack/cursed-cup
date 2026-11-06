@@ -12,6 +12,14 @@ All characters, clubs and players are fictional. Never use real footballers, clu
 - Commit messages: short, plain, prefixed with the milestone, e.g. `M1: match screen skeleton`.
 - New ideas mid-build go in `TODO.md`, not into this spec and not into code.
 
+## Long-term target: Steam
+
+V1 ships as a web game on GitHub Pages. The end goal is a paid Steam release, by wrapping the same code as a desktop app (Electron/NW.js/Tauri). No rewrite planned. To keep that path cheap:
+- Engine never touches the DOM. Game rules live in state/match/opponent/data files; ui.js only reads state. Keep it that way.
+- Phone is the playtest target, but nothing may depend on touch-only input or a narrow screen being the only layout. A desktop/landscape layout comes later.
+- From M5 on, record run stats (wins, goals, clean sheets, career-overs) in the save so achievements and meta-progression have data later.
+- Every asset must be original or properly licensed.
+
 ## Hard constraints — never violate these
 
 - Vanilla JavaScript + HTML/CSS DOM UI. No frameworks, no canvas game loop, no TypeScript. This is a turn-based card game; the DOM is the renderer.

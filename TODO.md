@@ -24,3 +24,10 @@ Not in V1. Don't build anything here until V1 ships.
 - Desktop packaging: wrap the web build (Electron/NW.js/Tauri) for Steam. Needs a desktop/landscape layout, mouse + keyboard, Steam Deck check.
 - Original art and audio for every asset. No AI-ambiguous or unlicensed assets in a paid release.
 - Store page needs: capsule art, trailer, screenshots, Steam Direct fee.
+
+## Content ideas — V2+ (after V1 ships)
+
+- Intro: short opening sequence (the hat-trick, the sky tearing open). Fits with the M6 title screen; keep it skippable.
+- Pick your starting club = StS characters. Each club: own starter deck, own card pool slice, own unique passive. Biggest content cost on this list; do one extra club first and test it.
+- Clubs: parody/archetype clubs only. No real names, crests, kits or near-copies (trademark risk on a paid Steam release). Recognisable by style, not by name.
+- Competitions as run types / acts, all with fictional names: domestic cup, continental cups (three tiers), international tournaments. Knockout formats fit the run structure. Leagues (38 matches) don't fit a roguelike run as-is; needs its own design if wanted.
